@@ -1,0 +1,10 @@
+package-lock.json
+*.zip
+*.rar
+.idea
+nbproject
+nbproject/private
+.vscode/
+.vs/
+node_modules/
+*.log

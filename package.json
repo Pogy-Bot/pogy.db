@@ -1,0 +1,36 @@
+{
+  "name": "pogy.db",
+  "version": "1.0.0",
+  "description": "A database wrapper for Pogy the discord bot.",
+  "main": "index.js",
+  "dependencies": {
+    "chalk": "^4.1.0",
+    "lodash": "^4.17.21",
+    "mongoose": "^6.5.2",
+    "winston": "^3.8.1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Pogy-Bot/pogy.db.git"
+  },
+  "keywords": [
+    "database",
+    "pogy.db",
+    "pogy-database",
+    "mongoose"
+  ],
+  "author": "pogy-bot",
+  "license": "Apache 2.0",
+  "bugs": {
+    "url": "https://github.com/Pogy-Bot/pogy.db/issues"
+  },
+  "homepage": "https://github.com/Pogy-Bot/pogy.db#readme",
+  "directories": {
+    "lib": "lib",
+    "test": "test"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  }
+}
