@@ -1,6 +1,6 @@
 {
   "name": "pogy.db",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "A database wrapper for Pogy the discord bot.",
   "main": "index.js",
   "types": "./typings.d.ts",
