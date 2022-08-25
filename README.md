@@ -1,5 +1,5 @@
 <p align="center"><a href="https://nodei.co/npm/pogy.db"><img src="https://nodei.co/npm/pogy.db.png"></a></p>
-<p align="center"><img src="https://img.shields.io/npm/v/pogy.db"> <img src="https://img.shields.io/npm/dm/pogy.db?label=downloads"> <img src="https://img.shields.io/npm/l/pogy.db"> <img src="https://img.shields.io/github/repo-size/meister03/pogy.db">  <a href="https://discord.gg/YTdNBHh"><img src="https://discordapp.com/api/guilds/758566519440408597/widget.png" alt="Discord server"/></a></p>
+<p align="center"><img src="https://img.shields.io/npm/v/pogy.db"> <img src="https://img.shields.io/npm/dm/pogy.db?label=downloads"> <img src="https://img.shields.io/npm/l/pogy.db"> <img src="https://img.shields.io/github/repo-size/pogy-bot/pogy.db">  <a href="https://discord.gg/YTdNBHh"><img src="https://discordapp.com/api/guilds/758566519440408597/widget.png" alt="Discord server"/></a></p>
 
 # Pogy.db
 
