@@ -3,6 +3,7 @@
   "version": "1.0.1",
   "description": "A database wrapper for Pogy the discord bot.",
   "main": "index.js",
+  "types": "./typings.d.ts",
   "dependencies": {
     "chalk": "^4.1.0",
     "lodash": "^4.17.21",
