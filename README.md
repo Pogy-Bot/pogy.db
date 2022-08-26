@@ -114,7 +114,7 @@ start();
 You can test all the functions at once by typing:
 
 ```bash
-npm test --url
+node test --url
 ```
 
 but replace "url" with the url of your database.
