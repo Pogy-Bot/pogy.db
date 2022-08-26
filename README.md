@@ -52,62 +52,62 @@ async function start() {
   // if the schema is available and the database is connected
   if (schema) {
     /* 
-   Setting an object in the database:
-   creates { id: "710465231779790849", username: "Peter_#4444" } in "discord"
-   returns true if successful
-  */
+     Setting an object in the database:
+     creates { id: "710465231779790849", username: "Peter_#4444" } in "discord"
+     returns true if successful
+   */
     await schema.set("discord", {
       id: "710465231779790849",
       username: "Peter_#4444",
     });
 
     /* 
-   Pushing an element to an array in the database:
-   returns true if successful
-  */
+     Pushing an element to an array in the database:
+     returns true if successful
+    */
     await schema.push("discord.badges", "verified");
 
     /* 
-    Add a value (number) to a key in the database
-    discord.message_count will be incremented by 1 which should now give 1
-  */
+      Add a value (number) to a key in the database
+      discord.message_count will be incremented by 1 which should now give 1
+    */
     await schema.add("discord.message_count", 1);
 
     /* 
-    Subtract a value (number) in the database
-    discord.message_count will be decremented by 1 which should now give 0
-  */
+      Subtract a value (number) in the database
+      discord.message_count will be decremented by 1 which should now give 0
+    */
     await schema.subtract("discord.message_count", 1);
 
     /* 
-    Get the value of a key in the database
-    returns ["verified"]
-  */
+      Get the value of a key in the database
+      returns ["verified"]
+    */
     await schema.get("discord.badges");
 
     /* 
-    Get the value of a key in the database (boolean)
-    returns true
-  */
+      Get the value of a key in the database (boolean)
+      returns true
+    */
     await schema.has("discord.badges"); // -> true
 
     /* 
-    Get the value of a key in the database (boolean)
-    returns true
-  */
+      Get the value of a key in the database (boolean)
+      returns true
+    */
     await schema.delete("discord.badges");
 
     /* 
-    Returns all the schemas in the table
-    { id: "710465231779790849", username: "Peter_#4444", message_count: 0 }
-    options available: documentForm (boolean) -> returns the object as document arrays used for migrations
-  */
+      Returns all the schemas in the table
+      { id: "710465231779790849", username: "Peter_#4444", message_count: 0 }
+      options available: documentForm (boolean) -> returns the object as document arrays used for migrations
+    */
     await schema.all();
 
     /* 
-   Drop/delete the table from the database, boolean.
-   returns true
-  */
+     Drop/delete the table from the database, boolean.
+     returns true
+    */
     await schema.drop();
   }
 }
@@ -217,11 +217,11 @@ const users = await new database.table("users");
 // if the schema is available and the database is connected
 if (users) {
   /*
-  set(key, value)
-  @param {string} key - The key to set.
-  @param {object | string | number} value - The value to set.
-  @returns {boolean} - Whether or not the operation was successful.
-*/
+    set(key, value)
+    @param {string} key - The key to set.
+    @param {object | string | number} value - The value to set.
+    @returns {boolean} - Whether or not the operation was successful.
+  */
   await users.set(message.author.id, {
     username: message.author.username,
     discriminator: message.author.discriminator,
@@ -232,10 +232,10 @@ if (users) {
   });
 
   /*
-  get(key)
-  @param {string} key - The key to get.
-  @returns {object | string | undefined} - The value of the key.
-*/
+    get(key)
+    @param {string} key - The key to get.
+    @returns {object | string | undefined} - The value of the key.
+  */
   const username = await users.get(`${message.author.id}.username`);
   console.log(username); // -> "Peter_#4444"
 }
@@ -427,19 +427,19 @@ const users = await new database.table("users");
 // if the database is online
 if (users) {
   /*
-  migrate(schema, newConnection)
-  @param {string} schema - The schema name to migrate
-  @param {object} newConnection - The new database connection.
-  @param {object} options - The migration options. (hideLogs - Whether or not to hide the logs) (model - The model to use default [id: String, data: Object])
-  @returns {object} - the migration status
-*/
+    migrate(schema, newConnection)
+    @param {string} schema - The schema name to migrate
+    @param {object} newConnection - The new database connection.
+    @param {object} options - The migration options. (hideLogs - Whether or not to hide the logs) (model - The model to use default [id: String, data: Object])
+    @returns {object} - the migration status
+  */
   await database.migrate("users", "mongodb://localhost:27017/test2", {
     hideLogs: false,
   });
 }
 ```
 
-## Ping
+## ping
 
 Get the execution time of your queries.
 
@@ -585,21 +585,21 @@ async function connect() {
 
       console.log(migration1);
       /*
-      returns if there is no error:
-      {
-       error: false,
-       date: date of migration in ms,
-       timeTaken: time taken to migrate in ms,
-       table: the table name,
-       dataCreated: the data created length
-      }
+       returns if there is no error:
+       {
+        error: false,
+        date: date of migration in ms,
+        timeTaken: time taken to migrate in ms,
+        table: the table name,
+        dataCreated: the data created length
+       }
 
-      returns if there is an error:
-      {
-       table: the table name,
-       error: the error
-      }
-    */
+       returns if there is an error:
+       {
+        table: the table name,
+        error: the error
+       }
+     */
 
       // or automatically migrate all tables
       database.DatabaseManager.tables.forEach(async (table) => {
@@ -618,21 +618,22 @@ async function connect() {
         console.log(migrationData);
 
         /*
-       returns if there is no error:
-       {
-        error: false,
-        date: date of migration in ms,
-        timeTaken: time taken to migrate in ms,
-        table: the table name,
-        dataCreated: the data created length
-       }
+          returns if there is no error:
+          {
+           error: false,
+           date: date of migration in ms,
+           timeTaken: time taken to migrate in ms,
+           table: the table name,
+           dataCreated: the data created length
+          }
 
-       returns if there is an error:
-       {
-        table: the table name,
-        error: the error
-       }
-      */
+          returns if there is an error:
+          {
+           table: the table name,
+           error: the error
+          }
+        */
+       
       });
     })
     .start();
