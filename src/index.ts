@@ -7,6 +7,7 @@ import type {
   migrateOptions,
   migrationObject,
   TableAllOptions,
+  CustomizedTable,
 } from "./types";
 
 export = {
@@ -39,7 +40,7 @@ export = {
   /**
    * @param {string} schema - The schema to migrate to.
    * @param {object} newConnection - The new database connection.
-   * @returns {object} - The migrated data.
+   * @returns {migrationObject} - The migrated data.
    */
   migrate: async function (
     schema: string,
@@ -130,10 +131,10 @@ export = {
   /**
    * Get a table from the database
    * @param {string} table - The name of the table
-   * @returns {object} The table object
+   * @returns {Promise<CustomizedTable>} The table object
    * @throws {TypeError} If the table encounters an error
    */
-  table: function (tableName: string) {
+  table: function (tableName: string): Promise<CustomizedTable> {
     return (async () => {
       if (!DatabaseManager.client)
         throw new TypeError(
@@ -154,7 +155,15 @@ export = {
       }
       this.table = DatabaseManager.client.collection(tableName);
 
-      this.get = async function (key: string) {
+      /**
+       * Get the value of a key from the table
+       * @param {string} key - The key to get the value of
+       * @returns {null | string | object | number} The value of the key
+       * @throws {TypeError} If no key was specified
+       */
+      this.get = async function (
+        key: string
+      ): Promise<null | string | object | number> {
         if (!key)
           throw new TypeError(
             "No key specified. Need Help ? Visit pogy.xyz/support"
@@ -164,7 +173,7 @@ export = {
         if (DatabaseManager.cache && DatabaseManager.cache.has(key) === true) {
           fetchedData = DatabaseManager.cache.get(key);
         } else {
-          let targetProvided;
+          let targetProvided: string;
           if (key.includes(".")) {
             let unparsedTarget = key.split(".");
             key = unparsedTarget.shift();
@@ -187,7 +196,17 @@ export = {
         return fetchedData;
       };
 
-      this.set = async function (key: string, value: any) {
+      /**
+       * Set the value of a key in the table
+       * @param {string} key - The key to set the value of
+       * @param {string | object | number} value - The value to set the key to
+       * @returns {null | boolean} The result of the operation
+       * @throws {TypeError} If no key or value was specified
+       **/
+      this.set = async function (
+        key: string,
+        value: string | object | number
+      ): Promise<null | boolean> {
         if (!key)
           throw new TypeError(
             "No key specified. Need Help ? Visit pogy.xyz/support"
@@ -196,7 +215,7 @@ export = {
           throw new TypeError(
             "No value specified. Need Help ? Visit pogy.xyz/support"
           );
-        let targetProvided;
+        let targetProvided: string;
         if (key.includes(".")) {
           let unparsedTarget = key.split(".");
           key = unparsedTarget.shift();
@@ -216,23 +235,33 @@ export = {
         return true;
       };
 
-      this.add = async function (key: string, value: any) {
+      /**
+       * Add a value to a key in the table
+       * @param {string} key - The key to add the value to
+       * @param {number | string | object} value - The value to add to the key
+       * @returns {null | boolean} The result of the operation
+       * @throws {TypeError} If no key or value was specified
+       **/
+      this.add = async function (
+        key: string,
+        value: number | string | object
+      ): Promise<null | boolean> {
         if (!key)
           throw new TypeError(
             "No key specified. Need Help ? Visit pogy.xyz/support"
           );
-        if (isNaN(value))
+        if (isNaN(Number(value)))
           throw new TypeError(
             "Must specify value to add. Need Help ? Visit pogy.xyz/support"
           );
-        let targetProvided;
+        let targetProvided: string;
         if (key.includes(".")) {
           let unparsedTarget = key.split(".");
           key = unparsedTarget.shift();
           targetProvided = unparsedTarget.join(".");
         }
-        if (isNaN(value)) return true;
-        value = parseInt(value);
+        if (isNaN(Number(value))) return true;
+        value = parseInt(Number(value).toString());
         if (DatabaseManager.cache)
           DatabaseManager.cache.set(key + "." + targetProvided, value);
         await this.table.updateOne(
@@ -247,23 +276,33 @@ export = {
         return true;
       };
 
-      this.subtract = async function (key: string, value: any) {
+      /**
+       * Subtract a value from a key in the table
+       * @param {string} key - The key to subtract the value to
+       * @param {string | object | number} value - The value to subtract from the key
+       * @returns {null | boolean} The result of the operation
+       * @throws {TypeError} If no key or value was specified
+       **/
+      this.subtract = async function (
+        key: string,
+        value: string | object | number
+      ): Promise<null | boolean> {
         if (!key)
           throw new TypeError(
             "No key specified. Need Help ? Visit pogy.xyz/support"
           );
-        if (isNaN(value))
+        if (isNaN(Number(value)))
           throw new TypeError(
             "Must specify value to subtract. Need Help ? Visit pogy.xyz/support"
           );
-        let targetProvided;
+        let targetProvided: string;
         if (key.includes(".")) {
           let unparsedTarget = key.split(".");
           key = unparsedTarget.shift();
           targetProvided = unparsedTarget.join(".");
         }
-        if (isNaN(value)) return true;
-        value = ~parseInt(value) + 1;
+        if (isNaN(Number(value))) return true;
+        value = ~parseInt(Number(value).toString()) + 1;
         if (DatabaseManager.cache)
           DatabaseManager.cache.set(key + "." + targetProvided, value);
         await this.table.updateOne(
@@ -278,12 +317,18 @@ export = {
         return true;
       };
 
-      this.has = async function (key: string) {
+      /**
+       * Subtract a value from a key in the table
+       * @param {string} key - The key to check if exists
+       * @returns {boolean} The result of the operation
+       * @throws {TypeError} If no key was specified
+       **/
+      this.has = async function (key: string): Promise<boolean> {
         if (!key)
           throw new TypeError(
             "No key specified. Need Help ? Visit pogy.xyz/support"
           );
-        let targetProvided;
+        let targetProvided: string;
         if (key.includes(".")) {
           let unparsedTarget = key.split(".");
           key = unparsedTarget.shift();
@@ -300,12 +345,18 @@ export = {
         return typeof fetchedData != "undefined";
       };
 
-      this.delete = async function (key: string) {
+      /**
+       * Delete a key from the table
+       * @param {string} key - The key to delete
+       * @returns {boolean} The result of the operation
+       * @throws {TypeError} If no key was specified or the traget provided is not an object
+       **/
+      this.delete = async function (key: string): Promise<boolean> {
         if (!key)
           throw new TypeError(
             "No key specified. Need Help ? Visit pogy.xyz/support"
           );
-        let targetProvided;
+        let targetProvided: string;
         if (key.includes(".")) {
           let unparsedTarget = key.split(".");
           key = unparsedTarget.shift();
@@ -324,12 +375,22 @@ export = {
           );
           return true;
         } else if (targetProvided)
-          throw new TypeError("targetProvided is not an object.");
+          throw new TypeError("The target provided is not an object.");
         else await this.table.deleteOne({ id: key });
         return true;
       };
 
-      this.push = async function (key: string, value: any) {
+      /**
+       * Push or create a value to an array in the table
+       * @param {string} key - The key to push the value to
+       * @param {string | object | number} value - The value to push to the key
+       * @returns {boolean} The result of the operation
+       * @throws {TypeError} If no key or value was specified
+       **/
+      this.push = async function (
+        key: string,
+        value: string | object | number
+      ): Promise<boolean> {
         if (!key)
           throw new TypeError(
             "No key specified. Need Help ? Visit pogy.xyz/support"
@@ -338,7 +399,7 @@ export = {
           throw new TypeError(
             "No value specified. Need Help ? Visit pogy.xyz/support"
           );
-        let targetProvided;
+        let targetProvided: string;
         if (key.includes(".")) {
           let unparsedTarget = key.split(".");
           key = unparsedTarget.shift();
@@ -370,7 +431,13 @@ export = {
         return true;
       };
 
-      this.all = async function (options: TableAllOptions) {
+      /**
+       * Fetch all the schemas from the table
+       * @param {TableAllOptions} options - The options to fetch the schemas with
+       * @returns {object} The schemas from the table
+       * @throws {TypeError} If no key was specified
+       **/
+      this.all = async function (options?: TableAllOptions): Promise<object> {
         let fetchedData = await this.table.find().toArray();
         if (options && options.documentForm) {
           return fetchedData;
@@ -383,12 +450,17 @@ export = {
         return data;
       };
 
-      this.drop = async function () {
+      /**
+       * Delete all the schemas from the table
+       * @returns {boolean} The result of the operation
+       * @throws {TypeError} If no key was specified
+       **/
+      this.drop = async function (): Promise<boolean> {
         await this.table.drop();
         return true;
       };
 
       return this;
-    })()
-  } as any as { new (tableName: string): any },
+    })();
+  } as any as { new (tableName: string): Promise<CustomizedTable> },
 };

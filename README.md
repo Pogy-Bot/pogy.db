@@ -22,9 +22,9 @@ yarn add pogy.db
 ## Example
 
 ```js
-const database = require("pogy.db")
+const database = require("pogy.db");
 //or
-import database from "pogy.db"
+import database from "pogy.db";
 
 async function start() {
   //start the connection to the database
@@ -65,7 +65,7 @@ async function start() {
   await schema.push("discord.badges", "verified");
 
   /* 
-    Increment a value (number) in the database
+    Add a value (number) to a key in the database
     discord.message_count will be incremented by 1 which should now give 1
   */
   await schema.add("discord.message_count", 1);
@@ -95,7 +95,7 @@ async function start() {
   await schema.delete("discord.badges");
 
   /* 
-    Returns all the specified table as an objecy
+    Returns all the specified table as an object
     { id: "710465231779790849", username: "Peter_#4444", message_count: 0 }
     options available: documentForm (boolean) -> returns the object as document arrays used for migrations
   */
@@ -172,9 +172,9 @@ mongooseOptions = {
 So, connecting yo your database would be
 
 ```js
-const database = require("pogy.db")
+const database = require("pogy.db");
 //or
-import database from "pogy.db"
+import database from "pogy.db";
 await database.connect(
   "mongodb://localhost:27017/test",
   {
@@ -211,7 +211,7 @@ const users = await new database.table("users");
 /*
   set(key, value)
   @param {string} key - The key to set.
-  @param {object} value - The value to set.
+  @param {object | string | number} value - The value to set.
   @returns {boolean} - Whether or not the operation was successful.
 */
 await users.set(message.author.id, {
@@ -252,7 +252,7 @@ This function is used to set the value of a key in the database.
 /*
   set(key, value)
   @param {string} key - The key to set.
-  @param {object} value - The value to set.
+  @param {object | string | number} value - The value to set.
   @returns {boolean} - Whether or not the operation was successful.
 */
 await users.set(`${message.author.id}.username`, "Peter_#4444"); // -> true
@@ -333,12 +333,12 @@ await users.delete(message.author.id); // -> true
 
 ### all()
 
-This function is used to get all the tables in the database.
+This function is used to get all the schemas from the table in the database.
 
 ```js
 /*
   all()
-  @returns {object} - All the tables.
+  @returns {object} - All the schemas in a table.
 */
 const usersInDatabase = await users.all();
 console.log(usersInDatabase); // -> [{ "710465231779790849": { username: "Peter_#4444", discriminator: "4444", id: "710465231779790849", avatar: "avatar", badges: [], message_count: 0 } }]
@@ -371,6 +371,35 @@ This function is used to drop the entire table!
 await users.drop(); // -> true
 ```
 
+### table (mongoose.Collection)
+
+What if those functions are not enough and you want to use mongoose functions?
+You can use `<your-table>.table.<function>` to call the function.
+
+Examples:
+- `users.table.find({})`
+- `guilds.table.findOne({})`
+
+or
+```js
+const users = await new database.table("users");
+
+const customTable = await users.table.findOne({}); 
+console.log(customTable)
+```
+
+or
+
+```js
+const customMongoDB = (await new database.table("users")).table;
+
+const user = await users.findOne({
+  id: "710465231779790849"
+}); 
+
+console.log(user)
+```
+
 ## MIGRATE
 
 ### migrate(schema, newConnection)
@@ -385,11 +414,11 @@ const users = await new database.table("users");
   @param {string} schema - The schema name to migrate
   @param {object} newConnection - The new database connection.
   @param {object} options - The migration options. (hideLogs - Whether or not to hide the logs) (model - The model to use default [id: String, data: Object])
-  @returns {boolean} - Whether or not the operation was successful.
+  @returns {object} - the migration status
 */
 await database.migrate("users", "mongodb://localhost:27017/test2", {
   hideLogs: false,
-}); // -> true
+});
 ```
 
 ## DatabaseManager
@@ -397,9 +426,9 @@ await database.migrate("users", "mongodb://localhost:27017/test2", {
 The database manager that holds the mongoose client, cache, and tables.
 
 ```js
-const database = require("pogy.db")
+const database = require("pogy.db");
 //or
-import database from "pogy.db"
+import database from "pogy.db";
 const DatabaseManager = database.DatabaseManager;
 
 DatabaseManager.client; // the mongoose client, returns null if mongoose is not connected.
@@ -414,9 +443,9 @@ You can use this to check for instance if the database is connected.
 ```js
 const DiscordClient = require("discord.js");
 const client = new DiscordClient();
-const database = require("pogy.db")
+const database = require("pogy.db");
 //or
-import database from "pogy.db"
+import database from "pogy.db";
 
 client.database = database.DatabaseManager.client;
 
@@ -429,9 +458,10 @@ Do you want to create a routine to backup your database every once in a while?
 
 ```js
 const cron = require("node-cron");
-const database = require("pogy.db")
+const database = require("pogy.db");
+const mongoose = require("mongoose");
 //or
-import database from "pogy.db"
+import database from "pogy.db";
 
 async function connect() {
   await database.connect(
@@ -462,10 +492,10 @@ async function connect() {
         "mongodb://localhost:27017/test2",
         {
           hideLogs: false, // add migration logs to your main logFile
-          model: {
+          model: new mongoose.Schema({
             id: String,
             data: Object,
-          }, // the model of the table, this is the default one but you can change it if you wanna customize your table.
+          }), // the model of the table, this is the default one but you can change it if you wanna customize your table.
         }
       );
 
@@ -494,10 +524,10 @@ async function connect() {
           "mongodb://localhost:27017/test2",
           {
             hideLogs: false, // add migration logs to your main logFile,
-            model: {
+            model: new mongoose.Schema({
               id: String,
               data: Object,
-            }, // the model of the table, this is the default one but you can change it if you wanna customize your table.
+            }), // the model of the table, this is the default one but you can change it if you wanna customize your table.
           }
         );
 
@@ -534,9 +564,9 @@ You can for instance send discord webhooks using discord.js to send a webhook on
 ```js
 const DiscordClient = require("discord.js");
 const client = new DiscordClient();
-const database = require("pogy.db")
+const database = require("pogy.db");
 //or
-import database from "pogy.db"
+import database from "pogy.db";
 
 async function connect() {
   await database.connect(

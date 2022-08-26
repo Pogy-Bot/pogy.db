@@ -1,6 +1,6 @@
 import DatabaseManager from "./database";
 import mongoose from "mongoose";
-import type { Options, migrateOptions, migrationObject } from "./types";
+import type { Options, migrateOptions, migrationObject, CustomizedTable } from "./types";
 declare const _default: {
     DatabaseManager: typeof DatabaseManager;
     /**
@@ -12,15 +12,15 @@ declare const _default: {
     /**
      * @param {string} schema - The schema to migrate to.
      * @param {object} newConnection - The new database connection.
-     * @returns {object} - The migrated data.
+     * @returns {migrationObject} - The migrated data.
      */
     migrate: (schema: string, newConnection: string, options: migrateOptions) => Promise<migrationObject>;
     /**
      * Get a table from the database
      * @param {string} table - The name of the table
-     * @returns {object} The table object
+     * @returns {Promise<CustomizedTable>} The table object
      * @throws {TypeError} If the table encounters an error
      */
-    table: new (tableName: string) => any;
+    table: new (tableName: string) => Promise<CustomizedTable>;
 };
 export = _default;

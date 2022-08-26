@@ -1,3 +1,4 @@
+import { Collection } from "mongoose";
 export declare type Options = {
     cache?: boolean;
     hidelogs?: boolean;
@@ -15,4 +16,16 @@ export declare type migrationObject = {
 };
 export declare type TableAllOptions = {
     documentForm?: boolean;
+};
+export declare type CustomizedTable = {
+    table: Collection;
+    get: (key: string) => Promise<null | string | object | number>;
+    set: (key: string, value: string | object | number) => Promise<null | boolean>;
+    add: (key: string, value: string | object | number) => Promise<null | boolean>;
+    subtract: (key: string, value: string | object | number) => Promise<null | boolean>;
+    has: (key: string) => Promise<boolean>;
+    delete: (key: string) => Promise<boolean>;
+    push: (key: string, value: string | object | number) => Promise<boolean>;
+    all: (options?: TableAllOptions) => Promise<object>;
+    drop: () => Promise<boolean>;
 };
