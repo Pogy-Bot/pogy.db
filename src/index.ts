@@ -9,7 +9,7 @@ import type {
   TableAllOptions,
 } from "./types";
 
-export default {
+export = {
   DatabaseManager: DatabaseManager,
   /**
    * Initiate the connection to mongo db

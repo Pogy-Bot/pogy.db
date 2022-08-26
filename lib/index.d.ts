@@ -23,4 +23,4 @@ declare const _default: {
      */
     table: new (tableName: string) => any;
 };
-export default _default;
+export = _default;
