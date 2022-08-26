@@ -5,6 +5,7 @@
   "main": "./lib/index.js",
   "dependencies": {
     "chalk": "^4.1.0",
+    "events": "^3.3.0",
     "lodash": "^4.17.21",
     "mongoose": "^6.5.3",
     "winston": "^3.8.1"

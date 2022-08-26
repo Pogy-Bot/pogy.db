@@ -9,6 +9,7 @@ Pogy.db is a mongoose **(v.6.5.2)** based database which is used in Pogy. Our da
 - Migrations, to backup your data every once in a while.
 - Caching, to speed up your queries.
 - Logging, get a log of when the database gets online, or offline.
+- Ping, check the execution time of your queries.
 - Fully customizable, you can customize your database options as you want.
 
 ## Download
@@ -48,64 +49,67 @@ async function start() {
   // Create a table or what you call as a collection, this will create a table called "users" if its not already created.
   const schema = await new database.table("users");
 
-  /* 
+  // if the schema is available and the database is connected
+  if (schema) {
+    /* 
    Setting an object in the database:
    creates { id: "710465231779790849", username: "Peter_#4444" } in "discord"
    returns true if successful
   */
-  await schema.set("discord", {
-    id: "710465231779790849",
-    username: "Peter_#4444",
-  });
+    await schema.set("discord", {
+      id: "710465231779790849",
+      username: "Peter_#4444",
+    });
 
-  /* 
+    /* 
    Pushing an element to an array in the database:
    returns true if successful
   */
-  await schema.push("discord.badges", "verified");
+    await schema.push("discord.badges", "verified");
 
-  /* 
+    /* 
     Add a value (number) to a key in the database
     discord.message_count will be incremented by 1 which should now give 1
   */
-  await schema.add("discord.message_count", 1);
+    await schema.add("discord.message_count", 1);
 
-  /* 
+    /* 
     Subtract a value (number) in the database
     discord.message_count will be decremented by 1 which should now give 0
   */
-  await schema.subtract("discord.message_count", 1);
+    await schema.subtract("discord.message_count", 1);
 
-  /* 
+    /* 
     Get the value of a key in the database
     returns ["verified"]
   */
-  await schema.get("discord.badges");
+    await schema.get("discord.badges");
 
-  /* 
+    /* 
     Get the value of a key in the database (boolean)
     returns true
   */
-  await schema.has("discord.badges"); // -> true
+    await schema.has("discord.badges"); // -> true
 
-  /* 
+    /* 
     Get the value of a key in the database (boolean)
     returns true
   */
-  await schema.delete("discord.badges");
+    await schema.delete("discord.badges");
 
-  /* 
-    Returns all the specified table as an object
+    /* 
+    Returns all the schemas in the table
     { id: "710465231779790849", username: "Peter_#4444", message_count: 0 }
     options available: documentForm (boolean) -> returns the object as document arrays used for migrations
   */
-  await schema.all();
+    await schema.all();
 
-  /* 
+    /* 
    Drop/delete the table from the database, boolean.
    returns true
   */
-  await schema.drop();
+    await schema.drop();
+  }
 }
 
 start();
@@ -127,9 +131,11 @@ but replace "url" with the url of your database.
 
 All functions in this package return a promise. So `await` is needed to get the result.
 
-- database.connect() **(Function)** - [Click here to go](#connect)
-- database.table() **(Function)** - [Click here to go](#table)
-- database.migrate() **(Function)** - [Click here to go](#migrate)
+- database.connect() **(async Function)** - [Click here to go](#connect)
+- database.table() **(async Function)** - [Click here to go](#table)
+- database.migrate() **(async Function)** - [Click here to go](#migrate)
+- database.ping() **(async Function)** - [Click here to go](#ping)
+- database.isOnline() **(Function)** - [Click here to go](#isonline)
 - database.DatabaseManager **(Class)** [Click here to go](#databasemanager)
 
 ## Connect
@@ -204,32 +210,35 @@ This function is used to create a table in the database or fetch an existing tab
 /*
   table(name)
   @param {string} name - The name of the table
-  @returns {object} - The table
+  @returns {object | boolean} - The table or false if the database is not connected.
 */
 const users = await new database.table("users");
 
-/*
+// if the schema is available and the database is connected
+if (users) {
+  /*
   set(key, value)
   @param {string} key - The key to set.
   @param {object | string | number} value - The value to set.
   @returns {boolean} - Whether or not the operation was successful.
 */
-await users.set(message.author.id, {
-  username: message.author.username,
-  discriminator: message.author.discriminator,
-  id: message.author.id,
-  avatar: message.author.avatarURL,
-  badges: [],
-  message_count: 0,
-});
+  await users.set(message.author.id, {
+    username: message.author.username,
+    discriminator: message.author.discriminator,
+    id: message.author.id,
+    avatar: message.author.avatarURL,
+    badges: [],
+    message_count: 0,
+  });
 
-/*
+  /*
   get(key)
   @param {string} key - The key to get.
   @returns {object | string | undefined} - The value of the key.
 */
-const username = await users.get(`${message.author.id}.username`);
-console.log(username); // -> "Peter_#4444"
+  const username = await users.get(`${message.author.id}.username`);
+  console.log(username); // -> "Peter_#4444"
+}
 ```
 
 ### get(key)
@@ -377,27 +386,33 @@ What if those functions are not enough and you want to use mongoose functions?
 You can use `<your-table>.table.<function>` to call the function.
 
 Examples:
+
 - `users.table.find({})`
 - `guilds.table.findOne({})`
 
 or
+
 ```js
 const users = await new database.table("users");
 
-const customTable = await users.table.findOne({}); 
-console.log(customTable)
+// if the database is online
+if (users) {
+  const customTable = await users.table.findOne({});
+  console.log(customTable);
+}
 ```
 
 or
 
 ```js
-const customMongoDB = (await new database.table("users")).table;
+// node js v14+
+const customMongoDB = (await new database.table("users"))?.table;
 
 const user = await users.findOne({
-  id: "710465231779790849"
-}); 
+  id: "710465231779790849",
+});
 
-console.log(user)
+console.log(user);
 ```
 
 ## MIGRATE
@@ -409,16 +424,63 @@ This function is used to migrate the table to a new database connection.
 ```js
 const users = await new database.table("users");
 
-/*
+// if the database is online
+if (users) {
+  /*
   migrate(schema, newConnection)
   @param {string} schema - The schema name to migrate
   @param {object} newConnection - The new database connection.
   @param {object} options - The migration options. (hideLogs - Whether or not to hide the logs) (model - The model to use default [id: String, data: Object])
   @returns {object} - the migration status
 */
-await database.migrate("users", "mongodb://localhost:27017/test2", {
-  hideLogs: false,
+  await database.migrate("users", "mongodb://localhost:27017/test2", {
+    hideLogs: false,
+  });
+}
+```
+
+## Ping
+
+Get the execution time of your queries.
+
+```js
+const database = require('pogy.db');
+
+const ping = database db.ping({
+      tableName: "users", // fetch one of the tables
+      dataToGet: "710465231779790849" // fetch one existing data from the table
 });
+
+console.log(ping);
+```
+
+if the table or data is not found it will return "false" (boolean)
+
+#### or
+
+if the table is found it will return:
+
+```json
+{
+  "cached": true, //if the data is cached
+  "tableName": "users", // the table name provided
+  "dataToGet": "710465231779790849", // the data requested
+  "timeToGetTable": 0.03450000286102295, // the time taken to get the table in ms
+  "timeToGetData": 0.011600017547607422, // the time taken to get the data in ms
+  "totalPing": 0.04610002040863037 // the total ping (table and data) in ms
+}
+```
+
+## isOnline
+
+Check if the database is online.
+
+```js
+const database = require("pogy.db");
+
+const isOnline = database.isOnline();
+
+console.log(isOnline); //true or false
 ```
 
 ## DatabaseManager
@@ -434,6 +496,7 @@ const DatabaseManager = database.DatabaseManager;
 DatabaseManager.client; // the mongoose client, returns null if mongoose is not connected.
 DatabaseManager.cache; // the cache, returns null if the cache is not enabled.
 DatabaseManager.tables; // the tables, returns an empty array if no tables are created.
+DatabaseManager.events; // the event emitter, databaseUp or databaseUp
 ```
 
 #### How is this useful?
@@ -450,6 +513,27 @@ import database from "pogy.db";
 client.database = database.DatabaseManager.client;
 
 console.log(client.database); // database connection or null
+
+
+/* ----------------- or -------------- */
+
+const pogyEvents = require("pogy.db").DatabaseManager.events;
+
+pogyEvents.on("databaseUp", (data) => {
+  console.log(data) // { reason: 'CONNECTED - The database connected.', date: 1661543764711 }
+  console.log("database is up");
+}
+
+pogyEvents.on("databaseDown", (data) => {
+  console.log(data) // { reason: 'DISCONNECTED - The database disconnected.', date: 1661543764711 }
+  console.log("database is down :(");
+}
+
+/* ----------------- or -------------- */
+
+const database = require("pogy.db");
+console.log(database.isOnline()); // true or false
+
 ```
 
 ## Enabling Migrations

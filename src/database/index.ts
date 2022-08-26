@@ -1,6 +1,7 @@
 import mongoose from "mongoose";
 import { logger, setLogFile } from "../logger";
 import { Options } from "../types";
+import { EventEmitter } from "events";
 
 class DatabaseManager {
   public mongoClient: mongoose.Connection | null;
@@ -9,6 +10,7 @@ class DatabaseManager {
   static cache: Map<any, any>;
   static client: mongoose.Connection | null;
   static tables: string[];
+  static events = new EventEmitter();
 
   constructor() {
     this.mongoClient = null;
@@ -57,6 +59,10 @@ class DatabaseManager {
       mongo.connection.on("error", (err) => {
         if (err.code === "ECONNREFUSED") {
           this.client = null;
+          this.events.emit("databaseDown", {
+            reason: "ECONNREFUSED - The database refused the connection.",
+            date: Date.now(),
+          });
         }
         if (!options || !options.hidelogs)
           logger.error(`Mongoose connection error: ${err.stack}`, {
@@ -66,24 +72,40 @@ class DatabaseManager {
 
       mongo.connection.on("disconnected", () => {
         this.client = null;
+        this.events.emit("databaseDown", {
+          reason: "DISCONNECTED - The database disconnected.",
+          date: Date.now(),
+        });
         if (!options || !options.hidelogs)
           logger.error(`Mongoose connection lost`, { label: "Database" });
       });
 
       mongo.connection.on("connected", () => {
         this.client = mongo.connection;
+        this.events.emit("databaseUp", {
+          reason: "CONNECTED - The database connected.",
+          date: Date.now(),
+        });
         if (!options || !options.hidelogs)
           logger.info(`Mongoose connection connected`, { label: "Database" });
       });
 
       mongo.connection.on("reconnected", () => {
         this.client = mongo.connection;
+        this.events.emit("databaseUp", {
+          reason: "RECONNECTED - The database reconnected.",
+          date: Date.now(),
+        });
         if (!options || !options.hidelogs)
           logger.info(`Mongoose connection reconnected`, { label: "Database" });
       });
 
       mongo.connection.on("reconnectFailed", () => {
-        this.client = mongo.connection;
+        this.client = null;
+        this.events.emit("databaseDown", {
+          reason: "RECONNECTFAILED - The database reconnect failed.",
+          date: Date.now(),
+        });
         if (!options || !options.hidelogs)
           logger.info(
             `Mongoose connection failed to connect after the tries.`,

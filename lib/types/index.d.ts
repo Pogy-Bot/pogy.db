@@ -29,3 +29,11 @@ export declare type CustomizedTable = {
     all: (options?: TableAllOptions) => Promise<object>;
     drop: () => Promise<boolean>;
 };
+export declare type PingResult = {
+    cached: boolean;
+    tableName: string;
+    dataToGet: string;
+    timeToGetTable: number;
+    timeToGetData: number;
+    totalPing: number;
+};

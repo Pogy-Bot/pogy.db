@@ -8,12 +8,22 @@ import type {
   migrationObject,
   TableAllOptions,
   CustomizedTable,
+  PingResult,
 } from "./types";
 
 export = {
   DatabaseManager: DatabaseManager,
+
   /**
-   * Initiate the connection to mongo db
+   * @info check if the database is online
+   * @returns {boolean} true if the database is online
+   */
+  isOnline: (): boolean => {
+    return DatabaseManager.client ? true : false;
+  },
+
+  /**
+   * @info Initiate the connection to mongo db
    * @param {string} url - The url of the mongo db
    * @param {object} options - The options for the mongo db
    */
@@ -38,6 +48,48 @@ export = {
   },
 
   /**
+   * @info Get the execution time of your queries.
+   * @param {object} options - The ping options
+   * @returns {PingResult | boolean} - The ping result or false if the data or table is not found
+   * @throws {TypeError} - If one of the options are missing
+   */
+  ping: async function (options: {
+    tableName: string;
+    dataToGet: string;
+  }): Promise<PingResult | boolean> {
+    if (!options) throw new TypeError("Ping options were not provided.");
+    if (!options.tableName)
+      throw new TypeError("A table name was not provided.");
+    if (!options.dataToGet)
+      throw new TypeError("A data to get was not provided.");
+    if (!this.isOnline()) return false;
+    if (!DatabaseManager.tables.includes(options.tableName)) return false;
+
+    const currentTime_table = performance.now();
+    const table = await new this.table(options.tableName);
+    const endTime_table = performance.now();
+
+    if (!table) return false;
+    const currentTime_data = performance.now();
+    const dataToGet = await table.get(options.dataToGet);
+    const endTime_data = performance.now();
+    if (!dataToGet) return false;
+
+    const timeToGetTable = endTime_table - currentTime_table;
+    const timeToGetData = endTime_data - currentTime_data;
+
+    return {
+      cached: DatabaseManager.cache ? true : false,
+      tableName: options.tableName,
+      dataToGet: options.dataToGet,
+      timeToGetTable: timeToGetTable,
+      timeToGetData: timeToGetData,
+      totalPing: timeToGetTable + timeToGetData,
+    };
+  },
+
+  /**
+   * @info Copy the database to another connection
    * @param {string} schema - The schema to migrate to.
    * @param {object} newConnection - The new database connection.
    * @returns {migrationObject} - The migrated data.
@@ -47,6 +99,17 @@ export = {
     newConnection: string,
     options: migrateOptions
   ): Promise<migrationObject> {
+    if (!this.isOnline()) {
+      if (!options || !options.hidelogs)
+        logger.error(`Unable to migrate since the database was offline`, {
+          label: "Migrations",
+        });
+      return {
+        table: schema,
+        error: new Error("Unable to migrate since the database was offline"),
+      };
+    }
+
     const currentTiming = Date.now();
     let step = 0;
     try {
@@ -131,15 +194,12 @@ export = {
   /**
    * Get a table from the database
    * @param {string} table - The name of the table
-   * @returns {Promise<CustomizedTable>} The table object
+   * @returns {CustomizedTable | boolean} The table object
    * @throws {TypeError} If the table encounters an error
    */
   table: function (tableName: string): Promise<CustomizedTable> {
     return (async () => {
-      if (!DatabaseManager.client)
-        throw new TypeError(
-          "Connect to your database. Need Help ? Visit pogy.xyz/support"
-        );
+      if (!DatabaseManager.client) return false;
       if (typeof tableName !== "string")
         throw new TypeError(
           "Table name has to be a string. Need Help ? Visit pogy.xyz/support"
@@ -156,7 +216,7 @@ export = {
       this.table = DatabaseManager.client.collection(tableName);
 
       /**
-       * Get the value of a key from the table
+       * @info Get the value of a key from the table
        * @param {string} key - The key to get the value of
        * @returns {null | string | object | number} The value of the key
        * @throws {TypeError} If no key was specified
@@ -191,13 +251,17 @@ export = {
                 key + "." + targetProvided,
                 fetchedData
               );
-          }
+          } //else {
+          // don't cache general data
+          // if (DatabaseManager.cache)
+          //   DatabaseManager.cache.set(key, fetchedData);
+          //}
         }
         return fetchedData;
       };
 
       /**
-       * Set the value of a key in the table
+       * @info Set the value of a key in the table
        * @param {string} key - The key to set the value of
        * @param {string | object | number} value - The value to set the key to
        * @returns {null | boolean} The result of the operation
@@ -236,7 +300,7 @@ export = {
       };
 
       /**
-       * Add a value to a key in the table
+       * @info Add a value to a key in the table
        * @param {string} key - The key to add the value to
        * @param {number | string | object} value - The value to add to the key
        * @returns {null | boolean} The result of the operation
@@ -277,7 +341,7 @@ export = {
       };
 
       /**
-       * Subtract a value from a key in the table
+       * @info Subtract a value from a key in the table
        * @param {string} key - The key to subtract the value to
        * @param {string | object | number} value - The value to subtract from the key
        * @returns {null | boolean} The result of the operation
@@ -318,7 +382,7 @@ export = {
       };
 
       /**
-       * Subtract a value from a key in the table
+       * @info Subtract a value from a key in the table
        * @param {string} key - The key to check if exists
        * @returns {boolean} The result of the operation
        * @throws {TypeError} If no key was specified
@@ -346,7 +410,7 @@ export = {
       };
 
       /**
-       * Delete a key from the table
+       * @info Delete a key from the table
        * @param {string} key - The key to delete
        * @returns {boolean} The result of the operation
        * @throws {TypeError} If no key was specified or the traget provided is not an object
@@ -381,7 +445,7 @@ export = {
       };
 
       /**
-       * Push or create a value to an array in the table
+       * @info Push or create a value to an array in the table
        * @param {string} key - The key to push the value to
        * @param {string | object | number} value - The value to push to the key
        * @returns {boolean} The result of the operation
@@ -427,12 +491,17 @@ export = {
                   fetchedData
                 );
             }
+            //else {
+            // don't cache general data
+            // if (DatabaseManager.cache)
+            //   DatabaseManager.cache.set(key, fetchedData);
+            //}
           });
         return true;
       };
 
       /**
-       * Fetch all the schemas from the table
+       * @info Fetch all the schemas from the table
        * @param {TableAllOptions} options - The options to fetch the schemas with
        * @returns {object} The schemas from the table
        * @throws {TypeError} If no key was specified
@@ -451,7 +520,7 @@ export = {
       };
 
       /**
-       * Delete all the schemas from the table
+       * @info Delete all the schemas from the table
        * @returns {boolean} The result of the operation
        * @throws {TypeError} If no key was specified
        **/

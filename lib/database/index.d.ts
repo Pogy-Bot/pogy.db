@@ -1,5 +1,7 @@
+/// <reference types="node" />
 import mongoose from "mongoose";
 import { Options } from "../types";
+import { EventEmitter } from "events";
 declare class DatabaseManager {
     mongoClient: mongoose.Connection | null;
     mongoTables: string[];
@@ -7,6 +9,7 @@ declare class DatabaseManager {
     static cache: Map<any, any>;
     static client: mongoose.Connection | null;
     static tables: string[];
+    static events: EventEmitter;
     constructor();
     get client(): mongoose.Connection;
     set client(value: mongoose.Connection);
