@@ -4,7 +4,7 @@
   "description": "A database wrapper for Pogy the discord bot.",
   "main": "./lib/index.js",
   "dependencies": {
-    "chalk": "^4.0.1",
+    "chalk": "^4.1.0",
     "lodash": "^4.17.21",
     "mongoose": "^6.5.3",
     "winston": "^3.8.1"
