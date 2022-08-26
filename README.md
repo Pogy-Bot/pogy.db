@@ -22,7 +22,9 @@ yarn add pogy.db
 ## Example
 
 ```js
-const database = require("pogy.db");
+const database = require("pogy.db").default
+//or
+import database from "pogy.db"
 
 async function start() {
   //start the connection to the database
@@ -170,7 +172,9 @@ mongooseOptions = {
 So, connecting yo your database would be
 
 ```js
-const database = require("pogy.db");
+const database = require("pogy.db").default
+//or
+import database from "pogy.db"
 await database.connect(
   "mongodb://localhost:27017/test",
   {
@@ -393,7 +397,9 @@ await database.migrate("users", "mongodb://localhost:27017/test2", {
 The database manager that holds the mongoose client, cache, and tables.
 
 ```js
-const database = require("pogy.db");
+const database = require("pogy.db").default
+//or
+import database from "pogy.db"
 const DatabaseManager = database.DatabaseManager;
 
 DatabaseManager.client; // the mongoose client, returns null if mongoose is not connected.
@@ -408,7 +414,9 @@ You can use this to check for instance if the database is connected.
 ```js
 const DiscordClient = require("discord.js");
 const client = new DiscordClient();
-const database = require("pogy.db");
+const database = require("pogy.db").default
+//or
+import database from "pogy.db"
 
 client.database = database.DatabaseManager.client;
 
@@ -421,7 +429,9 @@ Do you want to create a routine to backup your database every once in a while?
 
 ```js
 const cron = require("node-cron");
-const database = require("pogy.db");
+const database = require("pogy.db").default
+//or
+import database from "pogy.db"
 
 async function connect() {
   await database.connect(
@@ -524,7 +534,9 @@ You can for instance send discord webhooks using discord.js to send a webhook on
 ```js
 const DiscordClient = require("discord.js");
 const client = new DiscordClient();
-const database = require("pogy.db");
+const database = require("pogy.db").default
+//or
+import database from "pogy.db"
 
 async function connect() {
   await database.connect(
