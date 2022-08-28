@@ -38,7 +38,6 @@ async function start() {
     },
     {
       keepAlive: true,
-      useNewUrlParser: true,
       minPoolSize: 3,
       maxPoolSize: 10,
       serverSelectionTimeoutMS: 10000,
@@ -164,7 +163,6 @@ options = {
 // default mongooseOptions
 mongooseOptions = {
   keepAlive: true, // Whether or not to keep the connection alive.
-  useNewUrlParser: true, // Whether or not to use the new url parser.
   minPoolSize: 3, // The minimum pool size.
   maxPoolSize: 10, // The maximum pool size.
   serverSelectionTimeoutMS: 10000, // The server selection timeout.
@@ -191,7 +189,6 @@ await database.connect(
   {
     // mongoose options
     keepAlive: true,
-    useNewUrlParser: true,
     minPoolSize: 3,
     maxPoolSize: 10,
     serverSelectionTimeoutMS: 10000,
@@ -557,7 +554,6 @@ async function connect() {
     },
     {
       keepAlive: true,
-      useNewUrlParser: true,
       minPoolSize: 3,
       maxPoolSize: 10,
       serverSelectionTimeoutMS: 10000,
@@ -663,7 +659,6 @@ async function connect() {
     },
     {
       keepAlive: true,
-      useNewUrlParser: true,
       minPoolSize: 3,
       maxPoolSize: 10,
       serverSelectionTimeoutMS: 10000,

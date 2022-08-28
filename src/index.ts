@@ -285,17 +285,33 @@ export = {
           key = unparsedTarget.shift();
           targetProvided = unparsedTarget.join(".");
         }
-        if (DatabaseManager.cache)
-          DatabaseManager.cache.set(key + "." + targetProvided, value);
-        await this.table.updateOne(
-          { id: key },
-          {
-            $set: {
-              [targetProvided ? "data." + targetProvided : "data"]: value,
+
+        if (targetProvided) {
+          if (DatabaseManager.cache)
+            DatabaseManager.cache.set(key + "." + targetProvided, value);
+          await this.table.updateOne(
+            { id: key },
+            {
+              $set: {
+                [targetProvided ? "data." + targetProvided : "data"]: value,
+              },
             },
-          },
-          { upsert: true }
-        );
+            { upsert: true }
+          );
+        } else {
+          // don't cache general data
+          // if (DatabaseManager.cache) DatabaseManager.cache.set(key, value);
+          await this.table.updateOne(
+            { id: key },
+            {
+              $set: {
+                [targetProvided ? "data." + targetProvided : "data"]: value,
+              },
+            },
+            { upsert: true }
+          );
+        }
+
         return true;
       };
 
@@ -326,17 +342,33 @@ export = {
         }
         if (isNaN(Number(value))) return true;
         value = parseInt(Number(value).toString());
-        if (DatabaseManager.cache)
-          DatabaseManager.cache.set(key + "." + targetProvided, value);
-        await this.table.updateOne(
-          { id: key },
-          {
-            $inc: {
-              [targetProvided ? "data." + targetProvided : "data"]: value,
+
+        if (targetProvided) {
+          if (DatabaseManager.cache)
+            DatabaseManager.cache.set(key + "." + targetProvided, value);
+          await this.table.updateOne(
+            { id: key },
+            {
+              $inc: {
+                [targetProvided ? "data." + targetProvided : "data"]: value,
+              },
             },
-          },
-          { upsert: true }
-        );
+            { upsert: true }
+          );
+        } else {
+          // don't cache general data
+          // if (DatabaseManager.cache) DatabaseManager.cache.set(key, value);
+          await this.table.updateOne(
+            { id: key },
+            {
+              $inc: {
+                [targetProvided ? "data." + targetProvided : "data"]: value,
+              },
+            },
+            { upsert: true }
+          );
+        }
+
         return true;
       };
 
@@ -367,17 +399,33 @@ export = {
         }
         if (isNaN(Number(value))) return true;
         value = ~parseInt(Number(value).toString()) + 1;
-        if (DatabaseManager.cache)
-          DatabaseManager.cache.set(key + "." + targetProvided, value);
-        await this.table.updateOne(
-          { id: key },
-          {
-            $inc: {
-              [targetProvided ? "data." + targetProvided : "data"]: value,
+
+        if (targetProvided) {
+          if (DatabaseManager.cache)
+            DatabaseManager.cache.set(key + "." + targetProvided, value);
+          await this.table.updateOne(
+            { id: key },
+            {
+              $inc: {
+                [targetProvided ? "data." + targetProvided : "data"]: value,
+              },
             },
-          },
-          { upsert: true }
-        );
+            { upsert: true }
+          );
+        } else {
+          // don't cache general data
+          // if (DatabaseManager.cache) DatabaseManager.cache.set(key, value);
+          await this.table.updateOne(
+            { id: key },
+            {
+              $inc: {
+                [targetProvided ? "data." + targetProvided : "data"]: value,
+              },
+            },
+            { upsert: true }
+          );
+        }
+
         return true;
       };
 
