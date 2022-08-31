@@ -238,8 +238,11 @@ export = {
 
         let fetchedData;
         if (options && options.cache) DatabaseManager.enableCache();
-        if (DatabaseManager.cache && DatabaseManager.cache.has(key) === true) {
-          fetchedData = DatabaseManager.cache.get(key);
+        if (
+          DatabaseManager.cache &&
+          DatabaseManager.cache.has(this.table.name + "." + key) === true
+        ) {
+          fetchedData = DatabaseManager.cache.get(this.table.name + "." + key);
         } else {
           let targetProvided: string;
           if (key.includes(".")) {
@@ -256,7 +259,7 @@ export = {
             fetchedData = _.get(fetchedData, targetProvided);
             if (DatabaseManager.cache || (options && options.cache))
               DatabaseManager.cache.set(
-                key + "." + targetProvided,
+                this.table.name + "." + key + "." + targetProvided,
                 fetchedData
               );
           } else {
@@ -266,7 +269,10 @@ export = {
                 tableOptions.cacheLargeData) ||
               (options && options.cache)
             )
-              DatabaseManager.cache.set(key, fetchedData);
+              DatabaseManager.cache.set(
+                this.table.name + "." + key,
+                fetchedData
+              );
           }
         }
         return fetchedData;
@@ -303,7 +309,10 @@ export = {
         if (options && options.cache) DatabaseManager.enableCache();
         if (targetProvided) {
           if (DatabaseManager.cache || (options && options.cache))
-            DatabaseManager.cache.set(key + "." + targetProvided, value);
+            DatabaseManager.cache.set(
+              this.table.name + "." + key + "." + targetProvided,
+              value
+            );
           await this.table.updateOne(
             { id: key },
             {
@@ -320,7 +329,7 @@ export = {
               tableOptions.cacheLargeData) ||
             (options && options.cache)
           )
-            DatabaseManager.cache.set(key, value);
+            DatabaseManager.cache.set(this.table.name + "." + key, value);
           await this.table.updateOne(
             { id: key },
             {
@@ -368,10 +377,16 @@ export = {
         if (options && options.cache) DatabaseManager.enableCache();
         if (targetProvided) {
           if (DatabaseManager.cache || (options && options.cache)) {
-            if (DatabaseManager.cache.get(key + "." + targetProvided)) {
+            if (
+              DatabaseManager.cache.get(
+                this.table.name + "." + key + "." + targetProvided
+              )
+            ) {
               DatabaseManager.cache.set(
-                key + "." + targetProvided,
-                DatabaseManager.cache.get(key + "." + targetProvided) + value
+                this.table.name + "." + key + "." + targetProvided,
+                DatabaseManager.cache.get(
+                  this.table.name + "." + key + "." + targetProvided
+                ) + value
               );
 
               await this.table.updateOne(
@@ -394,15 +409,17 @@ export = {
                 { upsert: true, new: true }
               );
 
-              const incrementedData = _.get(
-                dataFetched.value.data,
-                targetProvided
-              );
+              if (dataFetched && dataFetched.value && dataFetched.value.data) {
+                const incrementedData = _.get(
+                  dataFetched.value.data,
+                  targetProvided
+                );
 
-              DatabaseManager.cache.set(
-                key + "." + targetProvided,
-                incrementedData
-              );
+                DatabaseManager.cache.set(
+                  this.table.name + "." + key + "." + targetProvided,
+                  incrementedData ? incrementedData : value
+                );
+              }
             }
           } else {
             await this.table.updateOne(
@@ -422,7 +439,7 @@ export = {
               tableOptions.cacheLargeData) ||
             (options && options.cache)
           )
-            DatabaseManager.cache.set(key, value);
+            DatabaseManager.cache.set(this.table.name + "." + key, value);
           await this.table.updateOne(
             { id: key },
             {
@@ -470,10 +487,16 @@ export = {
         if (options && options.cache) DatabaseManager.enableCache();
         if (targetProvided) {
           if (DatabaseManager.cache || (options && options.cache)) {
-            if (DatabaseManager.cache.get(key + "." + targetProvided)) {
+            if (
+              DatabaseManager.cache.get(
+                this.table.name + "." + key + "." + targetProvided
+              )
+            ) {
               DatabaseManager.cache.set(
-                key + "." + targetProvided,
-                DatabaseManager.cache.get(key + "." + targetProvided) + value
+                this.table.name + "." + key + "." + targetProvided,
+                DatabaseManager.cache.get(
+                  this.table.name + "." + key + "." + targetProvided
+                ) + value
               );
 
               await this.table.updateOne(
@@ -496,15 +519,17 @@ export = {
                 { upsert: true, new: true }
               );
 
-              const incrementedData = _.get(
-                dataFetched.value.data,
-                targetProvided
-              );
+              if (dataFetched && dataFetched.value && dataFetched.value.data) {
+                const decrementedData = _.get(
+                  dataFetched.value.data,
+                  targetProvided
+                );
 
-              DatabaseManager.cache.set(
-                key + "." + targetProvided,
-                incrementedData
-              );
+                DatabaseManager.cache.set(
+                  this.table.name + "." + key + "." + targetProvided,
+                  decrementedData ? decrementedData : value
+                );
+              }
             }
           } else {
             await this.table.updateOne(
@@ -524,7 +549,7 @@ export = {
               tableOptions.cacheLargeData) ||
             (options && options.cache)
           )
-            DatabaseManager.cache.set(key, value);
+            DatabaseManager.cache.set(this.table.name + "." + key, value);
           await this.table.updateOne(
             { id: key },
             {
@@ -590,15 +615,37 @@ export = {
         }
         fetchedData = fetchedData.data;
         if (typeof fetchedData === "object" && targetProvided) {
+          if (DatabaseManager.cache) {
+            DatabaseManager.cache.forEach((_, key_) => {
+              if (
+                key_.startsWith(
+                  this.table.name + "." + key + "." + targetProvided
+                )
+              ) {
+                DatabaseManager.cache.delete(key_);
+              }
+            });
+          }
+
           _.unset(fetchedData, targetProvided);
           await this.table.updateOne(
             { id: key },
             { $set: { data: fetchedData } }
           );
+
           return true;
         } else if (targetProvided)
           throw new TypeError("The target provided is not an object.");
-        else await this.table.deleteOne({ id: key });
+        else {
+          if (DatabaseManager.cache) {
+            DatabaseManager.cache.forEach((_, key_) => {
+              if (key_.startsWith(this.table.name + "." + key)) {
+                DatabaseManager.cache.delete(key_);
+              }
+            });
+          }
+          await this.table.deleteOne({ id: key });
+        }
         return true;
       };
 
@@ -648,7 +695,7 @@ export = {
               if (options && options.cache) DatabaseManager.enableCache();
               if (DatabaseManager.cache || (options && options.cache))
                 DatabaseManager.cache.set(
-                  key + "." + targetProvided,
+                  this.table.name + "." + key + "." + targetProvided,
                   fetchedData
                 );
             } else {
@@ -658,7 +705,10 @@ export = {
                   tableOptions.cacheLargeData) ||
                 (options && options.cache)
               )
-                DatabaseManager.cache.set(key, fetchedData);
+                DatabaseManager.cache.set(
+                  this.table.name + "." + key,
+                  fetchedData
+                );
             }
           });
         return true;
@@ -689,6 +739,13 @@ export = {
        * @throws {TypeError} If no key was specified
        **/
       this.drop = async function (): Promise<boolean> {
+        if (DatabaseManager.cache) {
+          DatabaseManager.cache.forEach((_, key) => {
+            if (key.startsWith(this.table.name)) {
+              DatabaseManager.cache.delete(key);
+            }
+          });
+        }
         await this.table.drop();
         return true;
       };
