@@ -108,6 +108,20 @@ async function start() {
      returns true
     */
     await schema.drop();
+
+    /* Some more Options */
+    const anotherSchema = await new database.table("users", {
+      cacheLargeData: true,
+    });
+
+    // cacheLargeData will cache large data. For example:
+    await schema.set("discord", {
+      id: "710465231779790849",
+      username: "Peter_#4444",
+      message_count: 0,
+    }); // this will cache "discord" with the whole object, so if your schema small you can turn it on, but if its big we recommend you turn it off.
+
+    // this applies to all functions like add, subtract, set, get, has, delete, push... You don't want to cache large data its better to cache small data like something.data.value rather than all the "something" object.
   }
 }
 
@@ -629,7 +643,6 @@ async function connect() {
            error: the error
           }
         */
-       
       });
     })
     .start();

@@ -197,7 +197,12 @@ export = {
    * @returns {CustomizedTable | boolean} The table object
    * @throws {TypeError} If the table encounters an error
    */
-  table: function (tableName: string): Promise<CustomizedTable> {
+  table: function (
+    tableName: string,
+    tableOptions: {
+      cacheLargeData?: boolean;
+    }
+  ): Promise<CustomizedTable> {
     return (async () => {
       if (!DatabaseManager.client) return false;
       if (typeof tableName !== "string")
@@ -251,11 +256,14 @@ export = {
                 key + "." + targetProvided,
                 fetchedData
               );
-          } //else {
-          // don't cache general data
-          // if (DatabaseManager.cache)
-          //   DatabaseManager.cache.set(key, fetchedData);
-          //}
+          } else {
+            if (
+              DatabaseManager.cache &&
+              tableOptions &&
+              tableOptions.cacheLargeData
+            )
+              DatabaseManager.cache.set(key, fetchedData);
+          }
         }
         return fetchedData;
       };
@@ -299,8 +307,12 @@ export = {
             { upsert: true }
           );
         } else {
-          // don't cache general data
-          // if (DatabaseManager.cache) DatabaseManager.cache.set(key, value);
+          if (
+            DatabaseManager.cache &&
+            tableOptions &&
+            tableOptions.cacheLargeData
+          )
+            DatabaseManager.cache.set(key, value);
           await this.table.updateOne(
             { id: key },
             {
@@ -393,8 +405,12 @@ export = {
             );
           }
         } else {
-          // don't cache general data
-          // if (DatabaseManager.cache) DatabaseManager.cache.set(key, value);
+          if (
+            DatabaseManager.cache &&
+            tableOptions &&
+            tableOptions.cacheLargeData
+          )
+            DatabaseManager.cache.set(key, value);
           await this.table.updateOne(
             { id: key },
             {
@@ -487,8 +503,12 @@ export = {
             );
           }
         } else {
-          // don't cache general data
-          // if (DatabaseManager.cache) DatabaseManager.cache.set(key, value);
+          if (
+            DatabaseManager.cache &&
+            tableOptions &&
+            tableOptions.cacheLargeData
+          )
+            DatabaseManager.cache.set(key, value);
           await this.table.updateOne(
             { id: key },
             {
@@ -612,12 +632,14 @@ export = {
                   key + "." + targetProvided,
                   fetchedData
                 );
+            } else {
+              if (
+                DatabaseManager.cache &&
+                tableOptions &&
+                tableOptions.cacheLargeData
+              )
+                DatabaseManager.cache.set(key, fetchedData);
             }
-            //else {
-            // don't cache general data
-            // if (DatabaseManager.cache)
-            //   DatabaseManager.cache.set(key, fetchedData);
-            //}
           });
         return true;
       };
@@ -653,5 +675,12 @@ export = {
 
       return this;
     })();
-  } as any as { new (tableName: string): Promise<CustomizedTable> },
+  } as any as {
+    new (
+      tableName: string,
+      tableOptions: {
+        cacheLargeData?: boolean;
+      }
+    ): Promise<CustomizedTable>;
+  },
 };
