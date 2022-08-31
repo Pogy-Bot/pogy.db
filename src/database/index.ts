@@ -53,7 +53,7 @@ class DatabaseManager {
   ) {
     try {
       if (options && options.logFile) setLogFile(options.logFile);
-      if (options && options.cache) this.cache = new Map();
+      if (options && options.cache) this.enableCache();
       const mongo = mongoose;
 
       mongo.connection.on("error", (err) => {
@@ -134,6 +134,11 @@ class DatabaseManager {
       });
       process.exit(1);
     }
+  }
+
+  static async enableCache() {
+    if(!this.cache) this.cache = new Map();
+    return true;
   }
 }
 

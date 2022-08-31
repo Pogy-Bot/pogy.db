@@ -223,11 +223,13 @@ export = {
       /**
        * @info Get the value of a key from the table
        * @param {string} key - The key to get the value of
+       * @param {object} options - The options provided. Supports cache: true if the original cache was false
        * @returns {null | string | object | number} The value of the key
        * @throws {TypeError} If no key was specified
        */
       this.get = async function (
-        key: string
+        key: string,
+        options: { cache: boolean }
       ): Promise<null | string | object | number> {
         if (!key)
           throw new TypeError(
@@ -235,6 +237,7 @@ export = {
           );
 
         let fetchedData;
+        if (options && options.cache) DatabaseManager.enableCache();
         if (DatabaseManager.cache && DatabaseManager.cache.has(key) === true) {
           fetchedData = DatabaseManager.cache.get(key);
         } else {
@@ -251,16 +254,17 @@ export = {
           fetchedData = fetchedData.data;
           if (targetProvided) {
             fetchedData = _.get(fetchedData, targetProvided);
-            if (DatabaseManager.cache)
+            if (DatabaseManager.cache || (options && options.cache))
               DatabaseManager.cache.set(
                 key + "." + targetProvided,
                 fetchedData
               );
           } else {
             if (
-              DatabaseManager.cache &&
-              tableOptions &&
-              tableOptions.cacheLargeData
+              (DatabaseManager.cache &&
+                tableOptions &&
+                tableOptions.cacheLargeData) ||
+              (options && options.cache)
             )
               DatabaseManager.cache.set(key, fetchedData);
           }
@@ -272,12 +276,14 @@ export = {
        * @info Set the value of a key in the table
        * @param {string} key - The key to set the value of
        * @param {string | object | number} value - The value to set the key to
+       * @param {object} options - The options provided. Supports cache: true if the original cache was false
        * @returns {null | boolean} The result of the operation
        * @throws {TypeError} If no key or value was specified
        **/
       this.set = async function (
         key: string,
-        value: string | object | number
+        value: string | object | number,
+        options: { cache: boolean }
       ): Promise<null | boolean> {
         if (!key)
           throw new TypeError(
@@ -294,8 +300,9 @@ export = {
           targetProvided = unparsedTarget.join(".");
         }
 
+        if (options && options.cache) DatabaseManager.enableCache();
         if (targetProvided) {
-          if (DatabaseManager.cache)
+          if (DatabaseManager.cache || (options && options.cache))
             DatabaseManager.cache.set(key + "." + targetProvided, value);
           await this.table.updateOne(
             { id: key },
@@ -308,9 +315,10 @@ export = {
           );
         } else {
           if (
-            DatabaseManager.cache &&
-            tableOptions &&
-            tableOptions.cacheLargeData
+            (DatabaseManager.cache &&
+              tableOptions &&
+              tableOptions.cacheLargeData) ||
+            (options && options.cache)
           )
             DatabaseManager.cache.set(key, value);
           await this.table.updateOne(
@@ -331,12 +339,14 @@ export = {
        * @info Add a value to a key in the table
        * @param {string} key - The key to add the value to
        * @param {number | string | object} value - The value to add to the key
+       * @param {object} options - The options provided. Supports cache: true if the original cache was false
        * @returns {null | boolean} The result of the operation
        * @throws {TypeError} If no key or value was specified
        **/
       this.add = async function (
         key: string,
-        value: number | string | object
+        value: number | string | object,
+        options: { cache: boolean }
       ): Promise<null | boolean> {
         if (!key)
           throw new TypeError(
@@ -355,8 +365,9 @@ export = {
         if (isNaN(Number(value))) return true;
         value = parseInt(Number(value).toString());
 
+        if (options && options.cache) DatabaseManager.enableCache();
         if (targetProvided) {
-          if (DatabaseManager.cache) {
+          if (DatabaseManager.cache || (options && options.cache)) {
             if (DatabaseManager.cache.get(key + "." + targetProvided)) {
               DatabaseManager.cache.set(
                 key + "." + targetProvided,
@@ -406,9 +417,10 @@ export = {
           }
         } else {
           if (
-            DatabaseManager.cache &&
-            tableOptions &&
-            tableOptions.cacheLargeData
+            (DatabaseManager.cache &&
+              tableOptions &&
+              tableOptions.cacheLargeData) ||
+            (options && options.cache)
           )
             DatabaseManager.cache.set(key, value);
           await this.table.updateOne(
@@ -429,12 +441,14 @@ export = {
        * @info Subtract a value from a key in the table
        * @param {string} key - The key to subtract the value to
        * @param {string | object | number} value - The value to subtract from the key
+       * @param {object} options - The options provided. Supports cache: true if the original cache was false
        * @returns {null | boolean} The result of the operation
        * @throws {TypeError} If no key or value was specified
        **/
       this.subtract = async function (
         key: string,
-        value: string | object | number
+        value: string | object | number,
+        options: { cache: boolean }
       ): Promise<null | boolean> {
         if (!key)
           throw new TypeError(
@@ -453,8 +467,9 @@ export = {
         if (isNaN(Number(value))) return true;
         value = ~parseInt(Number(value).toString()) + 1;
 
+        if (options && options.cache) DatabaseManager.enableCache();
         if (targetProvided) {
-          if (DatabaseManager.cache) {
+          if (DatabaseManager.cache || (options && options.cache)) {
             if (DatabaseManager.cache.get(key + "." + targetProvided)) {
               DatabaseManager.cache.set(
                 key + "." + targetProvided,
@@ -504,9 +519,10 @@ export = {
           }
         } else {
           if (
-            DatabaseManager.cache &&
-            tableOptions &&
-            tableOptions.cacheLargeData
+            (DatabaseManager.cache &&
+              tableOptions &&
+              tableOptions.cacheLargeData) ||
+            (options && options.cache)
           )
             DatabaseManager.cache.set(key, value);
           await this.table.updateOne(
@@ -590,12 +606,14 @@ export = {
        * @info Push or create a value to an array in the table
        * @param {string} key - The key to push the value to
        * @param {string | object | number} value - The value to push to the key
+       * @param {object} options - The options provided. Supports cache: true if the original cache was false
        * @returns {boolean} The result of the operation
        * @throws {TypeError} If no key or value was specified
        **/
       this.push = async function (
         key: string,
-        value: string | object | number
+        value: string | object | number,
+        options: { cache: boolean }
       ): Promise<boolean> {
         if (!key)
           throw new TypeError(
@@ -627,16 +645,18 @@ export = {
             if (targetProvided) {
               fetchedData = _.get(fetchedData, targetProvided);
 
-              if (DatabaseManager.cache)
+              if (options && options.cache) DatabaseManager.enableCache();
+              if (DatabaseManager.cache || (options && options.cache))
                 DatabaseManager.cache.set(
                   key + "." + targetProvided,
                   fetchedData
                 );
             } else {
               if (
-                DatabaseManager.cache &&
-                tableOptions &&
-                tableOptions.cacheLargeData
+                (DatabaseManager.cache &&
+                  tableOptions &&
+                  tableOptions.cacheLargeData) ||
+                (options && options.cache)
               )
                 DatabaseManager.cache.set(key, fetchedData);
             }

@@ -122,6 +122,34 @@ async function start() {
     }); // this will cache "discord" with the whole object, so if your schema small you can turn it on, but if its big we recommend you turn it off.
 
     // this applies to all functions like add, subtract, set, get, has, delete, push... You don't want to cache large data its better to cache small data like something.data.value rather than all the "something" object.
+
+    /* Some more Options */
+
+    // do you want to cache certain functions but not cache others?
+
+    // start by disabling the cache on the database
+    await database.connect(
+      "mongodb://localhost:27017/test",
+      {
+        cache: false, //cache was disabled
+        hidelogs: false,
+        logFile: "./logs/database.log",
+      },
+      {
+        keepAlive: true,
+        minPoolSize: 3,
+        maxPoolSize: 10,
+        serverSelectionTimeoutMS: 10000,
+        socketTimeoutMS: 60000,
+      }
+    );
+
+    // Now you can enable cache in the functions as so
+    // table.get(key, {cache: true})
+    // table.set(key, value, {cache: true})
+    // table.add(key, value, {cache: true})
+    // table.subtract(key, value, {cache: true})
+    // table.push(key, value, {cache: true})
   }
 }
 

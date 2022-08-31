@@ -22,5 +22,6 @@ declare class DatabaseManager {
      * @returns The mongoClient object.
      */
     static initMongo(url: string, options?: Options, databaseOptions?: mongoose.ConnectOptions): Promise<mongoose.Connection>;
+    static enableCache(): Promise<boolean>;
 }
 export default DatabaseManager;
