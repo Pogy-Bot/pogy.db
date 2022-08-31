@@ -344,17 +344,54 @@ export = {
         value = parseInt(Number(value).toString());
 
         if (targetProvided) {
-          if (DatabaseManager.cache)
-            DatabaseManager.cache.set(key + "." + targetProvided, value);
-          await this.table.updateOne(
-            { id: key },
-            {
-              $inc: {
-                [targetProvided ? "data." + targetProvided : "data"]: value,
+          if (DatabaseManager.cache) {
+            if (DatabaseManager.cache.get(key + "." + targetProvided)) {
+              DatabaseManager.cache.set(
+                key + "." + targetProvided,
+                DatabaseManager.cache.get(key + "." + targetProvided) + value
+              );
+
+              await this.table.updateOne(
+                { id: key },
+                {
+                  $inc: {
+                    [targetProvided ? "data." + targetProvided : "data"]: value,
+                  },
+                },
+                { upsert: true }
+              );
+            } else {
+              const dataFetched = await this.table.findOneAndUpdate(
+                { id: key },
+                {
+                  $inc: {
+                    [targetProvided ? "data." + targetProvided : "data"]: value,
+                  },
+                },
+                { upsert: true, new: true }
+              );
+
+              const incrementedData = _.get(
+                dataFetched.value.data,
+                targetProvided
+              );
+
+              DatabaseManager.cache.set(
+                key + "." + targetProvided,
+                incrementedData
+              );
+            }
+          } else {
+            await this.table.updateOne(
+              { id: key },
+              {
+                $inc: {
+                  [targetProvided ? "data." + targetProvided : "data"]: value,
+                },
               },
-            },
-            { upsert: true }
-          );
+              { upsert: true }
+            );
+          }
         } else {
           // don't cache general data
           // if (DatabaseManager.cache) DatabaseManager.cache.set(key, value);
@@ -401,17 +438,54 @@ export = {
         value = ~parseInt(Number(value).toString()) + 1;
 
         if (targetProvided) {
-          if (DatabaseManager.cache)
-            DatabaseManager.cache.set(key + "." + targetProvided, value);
-          await this.table.updateOne(
-            { id: key },
-            {
-              $inc: {
-                [targetProvided ? "data." + targetProvided : "data"]: value,
+          if (DatabaseManager.cache) {
+            if (DatabaseManager.cache.get(key + "." + targetProvided)) {
+              DatabaseManager.cache.set(
+                key + "." + targetProvided,
+                DatabaseManager.cache.get(key + "." + targetProvided) + value
+              );
+
+              await this.table.updateOne(
+                { id: key },
+                {
+                  $inc: {
+                    [targetProvided ? "data." + targetProvided : "data"]: value,
+                  },
+                },
+                { upsert: true }
+              );
+            } else {
+              const dataFetched = await this.table.findOneAndUpdate(
+                { id: key },
+                {
+                  $inc: {
+                    [targetProvided ? "data." + targetProvided : "data"]: value,
+                  },
+                },
+                { upsert: true, new: true }
+              );
+
+              const incrementedData = _.get(
+                dataFetched.value.data,
+                targetProvided
+              );
+
+              DatabaseManager.cache.set(
+                key + "." + targetProvided,
+                incrementedData
+              );
+            }
+          } else {
+            await this.table.updateOne(
+              { id: key },
+              {
+                $inc: {
+                  [targetProvided ? "data." + targetProvided : "data"]: value,
+                },
               },
-            },
-            { upsert: true }
-          );
+              { upsert: true }
+            );
+          }
         } else {
           // don't cache general data
           // if (DatabaseManager.cache) DatabaseManager.cache.set(key, value);
@@ -430,7 +504,7 @@ export = {
       };
 
       /**
-       * @info Subtract a value from a key in the table
+       * @info Check if a key exists in the table
        * @param {string} key - The key to check if exists
        * @returns {boolean} The result of the operation
        * @throws {TypeError} If no key was specified
