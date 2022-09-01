@@ -39,6 +39,7 @@ declare const _default: {
      */
     table: new (tableName: string, tableOptions: {
         cacheLargeData?: boolean;
+        catchErrors?: boolean;
     }) => Promise<CustomizedTable>;
 };
 export = _default;

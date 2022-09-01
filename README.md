@@ -46,7 +46,9 @@ async function start() {
   );
 
   // Create a table or what you call as a collection, this will create a table called "users" if its not already created.
-  const schema = await new database.table("users");
+  const schema = await new database.table("users", {
+    catchErrors: true, // logs errors if there's an error in the function
+  });
 
   // if the schema is available and the database is connected
   if (schema) {
@@ -126,6 +128,7 @@ async function start() {
     /* Some more Options */
     const anotherSchema = await new database.table("users", {
       cacheLargeData: true,
+      catchErrors: true, // logs errors if there's an error in the function
     });
 
     // cacheLargeData will cache large data. For example:
@@ -266,7 +269,9 @@ This function is used to create a table in the database or fetch an existing tab
   @param {string} name - The name of the table
   @returns {object | boolean} - The table or false if the database is not connected.
 */
-const users = await new database.table("users");
+const users = await new database.table("users", {
+  catchErrors: true, // logs errors if there's an error in the function
+});
 
 // if the schema is available and the database is connected
 if (users) {
@@ -447,7 +452,9 @@ Examples:
 or
 
 ```js
-const users = await new database.table("users");
+const users = await new database.table("users", {
+  catchErrors: true, // logs errors if there's an error in the function
+});
 
 // if the database is online
 if (users) {
@@ -460,7 +467,11 @@ or
 
 ```js
 // node js v14+
-const customMongoDB = (await new database.table("users"))?.table;
+const customMongoDB = (
+  await new database.table("users", [
+    (catchErrors: true), // logs errors if there's an error in the function
+  ])
+)?.table;
 
 const user = await users.findOne({
   id: "710465231779790849",
@@ -476,7 +487,9 @@ console.log(user);
 This function is used to migrate the table to a new database connection.
 
 ```js
-const users = await new database.table("users");
+const users = await new database.table("users", {
+  catchErrors: true, // logs errors if there's an error in the function
+});
 
 // if the database is online
 if (users) {

@@ -201,6 +201,7 @@ export = {
     tableName: string,
     tableOptions: {
       cacheLargeData?: boolean;
+      catchErrors?: boolean;
     }
   ): Promise<CustomizedTable> {
     return (async () => {
@@ -231,51 +232,63 @@ export = {
         key: string,
         options: { cache: boolean }
       ): Promise<null | string | object | number> {
-        if (!key)
-          throw new TypeError(
-            "No key specified. Need Help ? Visit pogy.xyz/support"
-          );
+        try {
+          if (!key)
+            throw new TypeError(
+              "No key specified. Need Help ? Visit pogy.xyz/support"
+            );
 
-        let fetchedData;
-        if (options && options.cache) DatabaseManager.enableCache();
-        if (
-          DatabaseManager.cache &&
-          DatabaseManager.cache.has(this.table.name + "." + key) === true
-        ) {
-          fetchedData = DatabaseManager.cache.get(this.table.name + "." + key);
-        } else {
-          let targetProvided: string;
-          if (key.includes(".")) {
-            let unparsedTarget = key.split(".");
-            key = unparsedTarget.shift();
-            targetProvided = unparsedTarget.join(".");
-          }
-          fetchedData = await this.table.findOne({ id: key });
-          if (!fetchedData) {
-            return null;
-          }
-          fetchedData = fetchedData.data;
-          if (targetProvided) {
-            fetchedData = _.get(fetchedData, targetProvided);
-            if (DatabaseManager.cache || (options && options.cache))
-              DatabaseManager.cache.set(
-                this.table.name + "." + key + "." + targetProvided,
-                fetchedData
-              );
+          let fetchedData;
+          if (options && options.cache) DatabaseManager.enableCache();
+          if (
+            DatabaseManager.cache &&
+            DatabaseManager.cache.has(this.table.name + "." + key) === true
+          ) {
+            fetchedData = DatabaseManager.cache.get(
+              this.table.name + "." + key
+            );
           } else {
-            if (
-              (DatabaseManager.cache &&
-                tableOptions &&
-                tableOptions.cacheLargeData) ||
-              (options && options.cache)
-            )
-              DatabaseManager.cache.set(
-                this.table.name + "." + key,
-                fetchedData
-              );
+            let targetProvided: string;
+            if (key.includes(".")) {
+              let unparsedTarget = key.split(".");
+              key = unparsedTarget.shift();
+              targetProvided = unparsedTarget.join(".");
+            }
+            
+            fetchedData = await this.table.findOne({ id: key });
+            if (!fetchedData) {
+              return null;
+            }
+            fetchedData = fetchedData.data;
+            if (targetProvided) {
+              fetchedData = _.get(fetchedData, targetProvided);
+              if (DatabaseManager.cache || (options && options.cache))
+                DatabaseManager.cache.set(
+                  this.table.name + "." + key + "." + targetProvided,
+                  fetchedData
+                );
+            } else {
+              if (
+                (DatabaseManager.cache &&
+                  tableOptions &&
+                  tableOptions.cacheLargeData) ||
+                (options && options.cache)
+              )
+                DatabaseManager.cache.set(
+                  this.table.name + "." + key,
+                  fetchedData
+                );
+            }
           }
+          return fetchedData;
+        } catch (err) {
+          if (tableOptions && tableOptions.catchErrors) {
+            logger.error("[table.get()]: " + err.message, {
+              label: "Table",
+            });
+          }
+          return null;
         }
-        return fetchedData;
       };
 
       /**
@@ -291,61 +304,70 @@ export = {
         value: string | object | number,
         options: { cache: boolean; returnData: boolean }
       ): Promise<null | boolean> {
-        if (!key)
-          throw new TypeError(
-            "No key specified. Need Help ? Visit pogy.xyz/support"
-          );
-        if (!value && value != 0)
-          throw new TypeError(
-            "No value specified. Need Help ? Visit pogy.xyz/support"
-          );
-
-        const initialKey = key;
-        let targetProvided: string;
-        if (key.includes(".")) {
-          let unparsedTarget = key.split(".");
-          key = unparsedTarget.shift();
-          targetProvided = unparsedTarget.join(".");
-        }
-
-        if (options && options.cache) DatabaseManager.enableCache();
-        if (targetProvided) {
-          if (DatabaseManager.cache || (options && options.cache))
-            DatabaseManager.cache.set(
-              this.table.name + "." + key + "." + targetProvided,
-              value
+        try {
+          if (!key)
+            throw new TypeError(
+              "No key specified. Need Help ? Visit pogy.xyz/support"
             );
-          await this.table.updateOne(
-            { id: key },
-            {
-              $set: {
-                [targetProvided ? "data." + targetProvided : "data"]: value,
-              },
-            },
-            { upsert: true }
-          );
-        } else {
-          if (
-            (DatabaseManager.cache &&
-              tableOptions &&
-              tableOptions.cacheLargeData) ||
-            (options && options.cache)
-          )
-            DatabaseManager.cache.set(this.table.name + "." + key, value);
-          await this.table.updateOne(
-            { id: key },
-            {
-              $set: {
-                [targetProvided ? "data." + targetProvided : "data"]: value,
-              },
-            },
-            { upsert: true }
-          );
-        }
+          if (!value && value != 0)
+            throw new TypeError(
+              "No value specified. Need Help ? Visit pogy.xyz/support"
+            );
 
-        if (options && options.returnData) {
-          return await this.get(initialKey, options);
-        } else return true;
+          const initialKey = key;
+          let targetProvided: string;
+          if (key.includes(".")) {
+            let unparsedTarget = key.split(".");
+            key = unparsedTarget.shift();
+            targetProvided = unparsedTarget.join(".");
+          }
+
+          if (options && options.cache) DatabaseManager.enableCache();
+          if (targetProvided) {
+            if (DatabaseManager.cache || (options && options.cache))
+              DatabaseManager.cache.set(
+                this.table.name + "." + key + "." + targetProvided,
+                value
+              );
+            await this.table.updateOne(
+              { id: key },
+              {
+                $set: {
+                  [targetProvided ? "data." + targetProvided : "data"]: value,
+                },
+              },
+              { upsert: true }
+            );
+          } else {
+            if (
+              (DatabaseManager.cache &&
+                tableOptions &&
+                tableOptions.cacheLargeData) ||
+              (options && options.cache)
+            )
+              DatabaseManager.cache.set(this.table.name + "." + key, value);
+            await this.table.updateOne(
+              { id: key },
+              {
+                $set: {
+                  [targetProvided ? "data." + targetProvided : "data"]: value,
+                },
+              },
+              { upsert: true }
+            );
+          }
+
+          if (options && options.returnData) {
+            return await this.get(initialKey, options);
+          } else return true;
+        } catch (err) {
+          if (tableOptions && tableOptions.catchErrors) {
+            logger.error("[table.set()]: " + err.message, {
+              label: "Table",
+            });
+          }
+          return false;
+        }
       };
 
       /**
@@ -361,41 +383,81 @@ export = {
         value: number | string | object,
         options: { cache: boolean; returnData: boolean }
       ): Promise<null | boolean> {
-        if (!key)
-          throw new TypeError(
-            "No key specified. Need Help ? Visit pogy.xyz/support"
-          );
-        if (isNaN(Number(value)))
-          throw new TypeError(
-            "Must specify value to add. Need Help ? Visit pogy.xyz/support"
-          );
+        try {
+          if (!key)
+            throw new TypeError(
+              "No key specified. Need Help ? Visit pogy.xyz/support"
+            );
+          if (isNaN(Number(value)))
+            throw new TypeError(
+              "Must specify value to add. Need Help ? Visit pogy.xyz/support"
+            );
 
-        const initialKey = key;
-        let targetProvided: string;
+          const initialKey = key;
+          let targetProvided: string;
 
-        if (key.includes(".")) {
-          let unparsedTarget = key.split(".");
-          key = unparsedTarget.shift();
-          targetProvided = unparsedTarget.join(".");
-        }
-        if (isNaN(Number(value))) return true;
-        value = parseInt(Number(value).toString());
+          if (key.includes(".")) {
+            let unparsedTarget = key.split(".");
+            key = unparsedTarget.shift();
+            targetProvided = unparsedTarget.join(".");
+          }
+          if (isNaN(Number(value))) return true;
+          value = parseInt(Number(value).toString());
 
-        if (options && options.cache) DatabaseManager.enableCache();
-        if (targetProvided) {
-          if (DatabaseManager.cache || (options && options.cache)) {
-            if (
-              DatabaseManager.cache.get(
-                this.table.name + "." + key + "." + targetProvided
-              )
-            ) {
-              DatabaseManager.cache.set(
-                this.table.name + "." + key + "." + targetProvided,
+          if (options && options.cache) DatabaseManager.enableCache();
+          if (targetProvided) {
+            if (DatabaseManager.cache || (options && options.cache)) {
+              if (
                 DatabaseManager.cache.get(
                   this.table.name + "." + key + "." + targetProvided
-                ) + value
-              );
+                )
+              ) {
+                DatabaseManager.cache.set(
+                  this.table.name + "." + key + "." + targetProvided,
+                  DatabaseManager.cache.get(
+                    this.table.name + "." + key + "." + targetProvided
+                  ) + value
+                );
 
+                await this.table.updateOne(
+                  { id: key },
+                  {
+                    $inc: {
+                      [targetProvided ? "data." + targetProvided : "data"]:
+                        value,
+                    },
+                  },
+                  { upsert: true }
+                );
+              } else {
+                const dataFetched = await this.table.findOneAndUpdate(
+                  { id: key },
+                  {
+                    $inc: {
+                      [targetProvided ? "data." + targetProvided : "data"]:
+                        value,
+                    },
+                  },
+                  { upsert: true, new: true }
+                );
+
+                if (
+                  dataFetched &&
+                  dataFetched.value &&
+                  dataFetched.value.data
+                ) {
+                  const incrementedData = _.get(
+                    dataFetched.value.data,
+                    targetProvided
+                  );
+
+                  DatabaseManager.cache.set(
+                    this.table.name + "." + key + "." + targetProvided,
+                    incrementedData ? incrementedData : value
+                  );
+                }
+              }
+            } else {
               await this.table.updateOne(
                 { id: key },
                 {
@@ -405,30 +467,15 @@ export = {
                 },
                 { upsert: true }
               );
-            } else {
-              const dataFetched = await this.table.findOneAndUpdate(
-                { id: key },
-                {
-                  $inc: {
-                    [targetProvided ? "data." + targetProvided : "data"]: value,
-                  },
-                },
-                { upsert: true, new: true }
-              );
-
-              if (dataFetched && dataFetched.value && dataFetched.value.data) {
-                const incrementedData = _.get(
-                  dataFetched.value.data,
-                  targetProvided
-                );
-
-                DatabaseManager.cache.set(
-                  this.table.name + "." + key + "." + targetProvided,
-                  incrementedData ? incrementedData : value
-                );
-              }
             }
           } else {
+            if (
+              (DatabaseManager.cache &&
+                tableOptions &&
+                tableOptions.cacheLargeData) ||
+              (options && options.cache)
+            )
+              DatabaseManager.cache.set(this.table.name + "." + key, value);
             await this.table.updateOne(
               { id: key },
               {
@@ -439,35 +486,25 @@ export = {
               { upsert: true }
             );
           }
-        } else {
-          if (
-            (DatabaseManager.cache &&
-              tableOptions &&
-              tableOptions.cacheLargeData) ||
-            (options && options.cache)
-          )
-            DatabaseManager.cache.set(this.table.name + "." + key, value);
-          await this.table.updateOne(
-            { id: key },
-            {
-              $inc: {
-                [targetProvided ? "data." + targetProvided : "data"]: value,
-              },
-            },
-            { upsert: true }
-          );
-        }
 
-        if (options && options.returnData) {
-          return await this.get(initialKey, options);
-        } else return true;
+          if (options && options.returnData) {
+            return await this.get(initialKey, options);
+          } else return true;
+        } catch (err) {
+          if (tableOptions && tableOptions.catchErrors) {
+            logger.error("[table.add()]: " + err.message, {
+              label: "Table",
+            });
+          }
+          return false;
+        }
       };
 
       /**
        * @info Subtract a value from a key in the table
        * @param {string} key - The key to subtract the value to
        * @param {string | object | number} value - The value to subtract from the key
-       *  @param {object} options - The options provided. Supports cache: true if the original cache was false and returnData: true if you want the data to be returned
+       * @param {object} options - The options provided. Supports cache: true if the original cache was false and returnData: true if you want the data to be returned
        * @returns {null | boolean | any} The result of the operation or the data if returnData is true
        * @throws {TypeError} If no key or value was specified
        **/
@@ -476,41 +513,81 @@ export = {
         value: string | object | number,
         options: { cache: boolean; returnData: boolean }
       ): Promise<null | boolean> {
-        if (!key)
-          throw new TypeError(
-            "No key specified. Need Help ? Visit pogy.xyz/support"
-          );
-        if (isNaN(Number(value)))
-          throw new TypeError(
-            "Must specify value to subtract. Need Help ? Visit pogy.xyz/support"
-          );
+        try {
+          if (!key)
+            throw new TypeError(
+              "No key specified. Need Help ? Visit pogy.xyz/support"
+            );
+          if (isNaN(Number(value)))
+            throw new TypeError(
+              "Must specify value to subtract. Need Help ? Visit pogy.xyz/support"
+            );
 
-        const initialKey = key;
-        let targetProvided: string;
+          const initialKey = key;
+          let targetProvided: string;
 
-        if (key.includes(".")) {
-          let unparsedTarget = key.split(".");
-          key = unparsedTarget.shift();
-          targetProvided = unparsedTarget.join(".");
-        }
-        if (isNaN(Number(value))) return true;
-        value = ~parseInt(Number(value).toString()) + 1;
+          if (key.includes(".")) {
+            let unparsedTarget = key.split(".");
+            key = unparsedTarget.shift();
+            targetProvided = unparsedTarget.join(".");
+          }
+          if (isNaN(Number(value))) return true;
+          value = ~parseInt(Number(value).toString()) + 1;
 
-        if (options && options.cache) DatabaseManager.enableCache();
-        if (targetProvided) {
-          if (DatabaseManager.cache || (options && options.cache)) {
-            if (
-              DatabaseManager.cache.get(
-                this.table.name + "." + key + "." + targetProvided
-              )
-            ) {
-              DatabaseManager.cache.set(
-                this.table.name + "." + key + "." + targetProvided,
+          if (options && options.cache) DatabaseManager.enableCache();
+          if (targetProvided) {
+            if (DatabaseManager.cache || (options && options.cache)) {
+              if (
                 DatabaseManager.cache.get(
                   this.table.name + "." + key + "." + targetProvided
-                ) + value
-              );
+                )
+              ) {
+                DatabaseManager.cache.set(
+                  this.table.name + "." + key + "." + targetProvided,
+                  DatabaseManager.cache.get(
+                    this.table.name + "." + key + "." + targetProvided
+                  ) + value
+                );
 
+                await this.table.updateOne(
+                  { id: key },
+                  {
+                    $inc: {
+                      [targetProvided ? "data." + targetProvided : "data"]:
+                        value,
+                    },
+                  },
+                  { upsert: true }
+                );
+              } else {
+                const dataFetched = await this.table.findOneAndUpdate(
+                  { id: key },
+                  {
+                    $inc: {
+                      [targetProvided ? "data." + targetProvided : "data"]:
+                        value,
+                    },
+                  },
+                  { upsert: true, new: true }
+                );
+
+                if (
+                  dataFetched &&
+                  dataFetched.value &&
+                  dataFetched.value.data
+                ) {
+                  const decrementedData = _.get(
+                    dataFetched.value.data,
+                    targetProvided
+                  );
+
+                  DatabaseManager.cache.set(
+                    this.table.name + "." + key + "." + targetProvided,
+                    decrementedData ? decrementedData : value
+                  );
+                }
+              }
+            } else {
               await this.table.updateOne(
                 { id: key },
                 {
@@ -520,30 +597,15 @@ export = {
                 },
                 { upsert: true }
               );
-            } else {
-              const dataFetched = await this.table.findOneAndUpdate(
-                { id: key },
-                {
-                  $inc: {
-                    [targetProvided ? "data." + targetProvided : "data"]: value,
-                  },
-                },
-                { upsert: true, new: true }
-              );
-
-              if (dataFetched && dataFetched.value && dataFetched.value.data) {
-                const decrementedData = _.get(
-                  dataFetched.value.data,
-                  targetProvided
-                );
-
-                DatabaseManager.cache.set(
-                  this.table.name + "." + key + "." + targetProvided,
-                  decrementedData ? decrementedData : value
-                );
-              }
             }
           } else {
+            if (
+              (DatabaseManager.cache &&
+                tableOptions &&
+                tableOptions.cacheLargeData) ||
+              (options && options.cache)
+            )
+              DatabaseManager.cache.set(this.table.name + "." + key, value);
             await this.table.updateOne(
               { id: key },
               {
@@ -554,56 +616,55 @@ export = {
               { upsert: true }
             );
           }
-        } else {
-          if (
-            (DatabaseManager.cache &&
-              tableOptions &&
-              tableOptions.cacheLargeData) ||
-            (options && options.cache)
-          )
-            DatabaseManager.cache.set(this.table.name + "." + key, value);
-          await this.table.updateOne(
-            { id: key },
-            {
-              $inc: {
-                [targetProvided ? "data." + targetProvided : "data"]: value,
-              },
-            },
-            { upsert: true }
-          );
-        }
 
-        if (options && options.returnData) {
-          return await this.get(initialKey, options);
-        } else return true;
+          if (options && options.returnData) {
+            return await this.get(initialKey, options);
+          } else return true;
+        } catch (err) {
+          if (tableOptions && tableOptions.catchErrors) {
+            logger.error("[table.subtract()]: " + err.message, {
+              label: "Table",
+            });
+          }
+          return false;
+        }
       };
 
       /**
        * @info Check if a key exists in the table
        * @param {string} key - The key to check if exists
-       * @returns {boolean} The result of the operation
+       * @returns {boolean | null} The result of the operation or null if an error occured
        * @throws {TypeError} If no key was specified
        **/
       this.has = async function (key: string): Promise<boolean> {
-        if (!key)
-          throw new TypeError(
-            "No key specified. Need Help ? Visit pogy.xyz/support"
-          );
-        let targetProvided: string;
-        if (key.includes(".")) {
-          let unparsedTarget = key.split(".");
-          key = unparsedTarget.shift();
-          targetProvided = unparsedTarget.join(".");
+        try {
+          if (!key)
+            throw new TypeError(
+              "No key specified. Need Help ? Visit pogy.xyz/support"
+            );
+          let targetProvided: string;
+          if (key.includes(".")) {
+            let unparsedTarget = key.split(".");
+            key = unparsedTarget.shift();
+            targetProvided = unparsedTarget.join(".");
+          }
+          let fetchedData = await this.table.findOne({ id: key });
+          if (!fetchedData) {
+            return false;
+          }
+          fetchedData = fetchedData.data;
+          if (targetProvided) {
+            fetchedData = _.get(fetchedData, targetProvided);
+          }
+          return typeof fetchedData != "undefined";
+        } catch (err) {
+          if (tableOptions && tableOptions.catchErrors) {
+            logger.error("[table.has()]: " + err.message, {
+              label: "Table",
+            });
+          }
+          return null;
         }
-        let fetchedData = await this.table.findOne({ id: key });
-        if (!fetchedData) {
-          return false;
-        }
-        fetchedData = fetchedData.data;
-        if (targetProvided) {
-          fetchedData = _.get(fetchedData, targetProvided);
-        }
-        return typeof fetchedData != "undefined";
       };
 
       /**
@@ -613,54 +674,63 @@ export = {
        * @throws {TypeError} If no key was specified or the traget provided is not an object
        **/
       this.delete = async function (key: string): Promise<boolean> {
-        if (!key)
-          throw new TypeError(
-            "No key specified. Need Help ? Visit pogy.xyz/support"
-          );
-        let targetProvided: string;
-        if (key.includes(".")) {
-          let unparsedTarget = key.split(".");
-          key = unparsedTarget.shift();
-          targetProvided = unparsedTarget.join(".");
-        }
-        let fetchedData = await this.table.findOne({ id: key });
-        if (!fetchedData) {
-          return null;
-        }
-        fetchedData = fetchedData.data;
-        if (typeof fetchedData === "object" && targetProvided) {
-          if (DatabaseManager.cache) {
-            DatabaseManager.cache.forEach((_, key_) => {
-              if (
-                key_.startsWith(
-                  this.table.name + "." + key + "." + targetProvided
-                )
-              ) {
-                DatabaseManager.cache.delete(key_);
-              }
-            });
+        try {
+          if (!key)
+            throw new TypeError(
+              "No key specified. Need Help ? Visit pogy.xyz/support"
+            );
+          let targetProvided: string;
+          if (key.includes(".")) {
+            let unparsedTarget = key.split(".");
+            key = unparsedTarget.shift();
+            targetProvided = unparsedTarget.join(".");
           }
+          let fetchedData = await this.table.findOne({ id: key });
+          if (!fetchedData) {
+            return null;
+          }
+          fetchedData = fetchedData.data;
+          if (typeof fetchedData === "object" && targetProvided) {
+            if (DatabaseManager.cache) {
+              DatabaseManager.cache.forEach((_, key_) => {
+                if (
+                  key_.startsWith(
+                    this.table.name + "." + key + "." + targetProvided
+                  )
+                ) {
+                  DatabaseManager.cache.delete(key_);
+                }
+              });
+            }
 
-          _.unset(fetchedData, targetProvided);
-          await this.table.updateOne(
-            { id: key },
-            { $set: { data: fetchedData } }
-          );
+            _.unset(fetchedData, targetProvided);
+            await this.table.updateOne(
+              { id: key },
+              { $set: { data: fetchedData } }
+            );
 
+            return true;
+          } else if (targetProvided)
+            throw new TypeError("The target provided is not an object.");
+          else {
+            if (DatabaseManager.cache) {
+              DatabaseManager.cache.forEach((_, key_) => {
+                if (key_.startsWith(this.table.name + "." + key)) {
+                  DatabaseManager.cache.delete(key_);
+                }
+              });
+            }
+            await this.table.deleteOne({ id: key });
+          }
           return true;
-        } else if (targetProvided)
-          throw new TypeError("The target provided is not an object.");
-        else {
-          if (DatabaseManager.cache) {
-            DatabaseManager.cache.forEach((_, key_) => {
-              if (key_.startsWith(this.table.name + "." + key)) {
-                DatabaseManager.cache.delete(key_);
-              }
+        } catch (err) {
+          if (tableOptions && tableOptions.catchErrors) {
+            logger.error("[table.delete()]: " + err.message, {
+              label: "Table",
             });
           }
-          await this.table.deleteOne({ id: key });
+          return false;
         }
-        return true;
       };
 
       /**
@@ -676,62 +746,71 @@ export = {
         value: string | object | number,
         options: { cache: boolean; returnData: boolean }
       ): Promise<boolean> {
-        if (!key)
-          throw new TypeError(
-            "No key specified. Need Help ? Visit pogy.xyz/support"
-          );
-        if (!value && value != 0)
-          throw new TypeError(
-            "No value specified. Need Help ? Visit pogy.xyz/support"
-          );
+        try {
+          if (!key)
+            throw new TypeError(
+              "No key specified. Need Help ? Visit pogy.xyz/support"
+            );
+          if (!value && value != 0)
+            throw new TypeError(
+              "No value specified. Need Help ? Visit pogy.xyz/support"
+            );
 
-        const initialKey = key;
+          const initialKey = key;
 
-        let targetProvided: string;
-        if (key.includes(".")) {
-          let unparsedTarget = key.split(".");
-          key = unparsedTarget.shift();
-          targetProvided = unparsedTarget.join(".");
-        }
+          let targetProvided: string;
+          if (key.includes(".")) {
+            let unparsedTarget = key.split(".");
+            key = unparsedTarget.shift();
+            targetProvided = unparsedTarget.join(".");
+          }
 
-        await this.table
-          .updateOne(
-            { id: key },
-            {
-              $push: {
-                [targetProvided ? "data." + targetProvided : "data"]: value,
+          await this.table
+            .updateOne(
+              { id: key },
+              {
+                $push: {
+                  [targetProvided ? "data." + targetProvided : "data"]: value,
+                },
               },
-            },
-            { upsert: true }
-          )
-          .then(async () => {
-            let fetchedData = (await this.table.findOne({ id: key })).data;
-            if (targetProvided) {
-              fetchedData = _.get(fetchedData, targetProvided);
+              { upsert: true }
+            )
+            .then(async () => {
+              let fetchedData = (await this.table.findOne({ id: key })).data;
+              if (targetProvided) {
+                fetchedData = _.get(fetchedData, targetProvided);
 
-              if (options && options.cache) DatabaseManager.enableCache();
-              if (DatabaseManager.cache || (options && options.cache))
-                DatabaseManager.cache.set(
-                  this.table.name + "." + key + "." + targetProvided,
-                  fetchedData
-                );
-            } else {
-              if (
-                (DatabaseManager.cache &&
-                  tableOptions &&
-                  tableOptions.cacheLargeData) ||
-                (options && options.cache)
-              )
-                DatabaseManager.cache.set(
-                  this.table.name + "." + key,
-                  fetchedData
-                );
-            }
-          });
+                if (options && options.cache) DatabaseManager.enableCache();
+                if (DatabaseManager.cache || (options && options.cache))
+                  DatabaseManager.cache.set(
+                    this.table.name + "." + key + "." + targetProvided,
+                    fetchedData
+                  );
+              } else {
+                if (
+                  (DatabaseManager.cache &&
+                    tableOptions &&
+                    tableOptions.cacheLargeData) ||
+                  (options && options.cache)
+                )
+                  DatabaseManager.cache.set(
+                    this.table.name + "." + key,
+                    fetchedData
+                  );
+              }
+            });
 
-        if (options && options.returnData) {
-          return await this.get(initialKey, options);
-        } else return true;
+          if (options && options.returnData) {
+            return await this.get(initialKey, options);
+          } else return true;
+        } catch (err) {
+          if (tableOptions && tableOptions.catchErrors) {
+            logger.error("[table.push()]: " + err.message, {
+              label: "Table",
+            });
+          }
+          return false;
+        }
       };
 
       /**
@@ -747,62 +826,71 @@ export = {
         value: string | object | number,
         options: { cache: boolean; returnData: true }
       ): Promise<boolean> {
-        if (!key)
-          throw new TypeError(
-            "No key specified. Need Help ? Visit pogy.xyz/support"
-          );
-        if (!value && value != 0)
-          throw new TypeError(
-            "No value specified. Need Help ? Visit pogy.xyz/support"
-          );
+        try {
+          if (!key)
+            throw new TypeError(
+              "No key specified. Need Help ? Visit pogy.xyz/support"
+            );
+          if (!value && value != 0)
+            throw new TypeError(
+              "No value specified. Need Help ? Visit pogy.xyz/support"
+            );
 
-        const initialKey = key;
-        let targetProvided: string;
+          const initialKey = key;
+          let targetProvided: string;
 
-        if (key.includes(".")) {
-          let unparsedTarget = key.split(".");
-          key = unparsedTarget.shift();
-          targetProvided = unparsedTarget.join(".");
-        }
+          if (key.includes(".")) {
+            let unparsedTarget = key.split(".");
+            key = unparsedTarget.shift();
+            targetProvided = unparsedTarget.join(".");
+          }
 
-        await this.table
-          .updateOne(
-            { id: key },
-            {
-              $pull: {
-                [targetProvided ? "data." + targetProvided : "data"]: value,
+          await this.table
+            .updateOne(
+              { id: key },
+              {
+                $pull: {
+                  [targetProvided ? "data." + targetProvided : "data"]: value,
+                },
               },
-            },
-            { upsert: true }
-          )
-          .then(async () => {
-            let fetchedData = (await this.table.findOne({ id: key })).data;
-            if (targetProvided) {
-              fetchedData = _.get(fetchedData, targetProvided);
+              { upsert: true }
+            )
+            .then(async () => {
+              let fetchedData = (await this.table.findOne({ id: key })).data;
+              if (targetProvided) {
+                fetchedData = _.get(fetchedData, targetProvided);
 
-              if (options && options.cache) DatabaseManager.enableCache();
-              if (DatabaseManager.cache || (options && options.cache))
-                DatabaseManager.cache.set(
-                  this.table.name + "." + key + "." + targetProvided,
-                  fetchedData
-                );
-            } else {
-              if (
-                (DatabaseManager.cache &&
-                  tableOptions &&
-                  tableOptions.cacheLargeData) ||
-                (options && options.cache)
-              )
-                DatabaseManager.cache.set(
-                  this.table.name + "." + key,
-                  fetchedData
-                );
-            }
-          });
+                if (options && options.cache) DatabaseManager.enableCache();
+                if (DatabaseManager.cache || (options && options.cache))
+                  DatabaseManager.cache.set(
+                    this.table.name + "." + key + "." + targetProvided,
+                    fetchedData
+                  );
+              } else {
+                if (
+                  (DatabaseManager.cache &&
+                    tableOptions &&
+                    tableOptions.cacheLargeData) ||
+                  (options && options.cache)
+                )
+                  DatabaseManager.cache.set(
+                    this.table.name + "." + key,
+                    fetchedData
+                  );
+              }
+            });
 
-        if (options && options.returnData) {
-          return await this.get(initialKey, options);
-        } else return true;
+          if (options && options.returnData) {
+            return await this.get(initialKey, options);
+          } else return true;
+        } catch (err) {
+          if (tableOptions && tableOptions.catchErrors) {
+            logger.error("[table.pull()]: " + err.message, {
+              label: "Table",
+            });
+          }
+          return false;
+        }
       };
 
       /**
@@ -812,16 +900,25 @@ export = {
        * @throws {TypeError} If no key was specified
        **/
       this.all = async function (options?: TableAllOptions): Promise<object> {
-        let fetchedData = await this.table.find().toArray();
-        if (options && options.documentForm) {
-          return fetchedData;
-        }
+        try {
+          let fetchedData = await this.table.find().toArray();
+          if (options && options.documentForm) {
+            return fetchedData;
+          }
 
-        let data = {};
-        fetchedData.forEach(async (i) => {
-          data[i.id] = i.data;
-        });
-        return data;
+          let data = {};
+          fetchedData.forEach(async (i) => {
+            data[i.id] = i.data;
+          });
+          return data;
+        } catch (err) {
+          if (tableOptions && tableOptions.catchErrors) {
+            logger.error("[table.all()]: " + err.message, {
+              label: "Table",
+            });
+          }
+          return {};
+        }
       };
 
       /**
@@ -830,15 +927,24 @@ export = {
        * @throws {TypeError} If no key was specified
        **/
       this.drop = async function (): Promise<boolean> {
-        if (DatabaseManager.cache) {
-          DatabaseManager.cache.forEach((_, key) => {
-            if (key.startsWith(this.table.name)) {
-              DatabaseManager.cache.delete(key);
-            }
-          });
+        try {
+          if (DatabaseManager.cache) {
+            DatabaseManager.cache.forEach((_, key) => {
+              if (key.startsWith(this.table.name)) {
+                DatabaseManager.cache.delete(key);
+              }
+            });
+          }
+          await this.table.drop();
+          return true;
+        } catch (err) {
+          if (tableOptions && tableOptions.catchErrors) {
+            logger.error("[table.drop()]: " + err.message, {
+              label: "Table",
+            });
+          }
+          return false;
         }
-        await this.table.drop();
-        return true;
       };
 
       return this;
@@ -848,6 +954,7 @@ export = {
       tableName: string,
       tableOptions: {
         cacheLargeData?: boolean;
+        catchErrors?: boolean;
       }
     ): Promise<CustomizedTable>;
   },
