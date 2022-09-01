@@ -282,14 +282,14 @@ export = {
        * @info Set the value of a key in the table
        * @param {string} key - The key to set the value of
        * @param {string | object | number} value - The value to set the key to
-       * @param {object} options - The options provided. Supports cache: true if the original cache was false
-       * @returns {null | boolean} The result of the operation
+       * @param {object} options - The options provided. Supports cache: true if the original cache was false and returnData: true if you want the data to be returned
+       * @returns {null | boolean | any} The result of the operation or the data if returnData is true
        * @throws {TypeError} If no key or value was specified
        **/
       this.set = async function (
         key: string,
         value: string | object | number,
-        options: { cache: boolean }
+        options: { cache: boolean; returnData: boolean }
       ): Promise<null | boolean> {
         if (!key)
           throw new TypeError(
@@ -299,6 +299,8 @@ export = {
           throw new TypeError(
             "No value specified. Need Help ? Visit pogy.xyz/support"
           );
+
+        const initialKey = key;
         let targetProvided: string;
         if (key.includes(".")) {
           let unparsedTarget = key.split(".");
@@ -341,21 +343,23 @@ export = {
           );
         }
 
-        return true;
+        if (options && options.returnData) {
+          return await this.get(initialKey, options);
+        } else return true;
       };
 
       /**
        * @info Add a value to a key in the table
        * @param {string} key - The key to add the value to
        * @param {number | string | object} value - The value to add to the key
-       * @param {object} options - The options provided. Supports cache: true if the original cache was false
-       * @returns {null | boolean} The result of the operation
+       * @param {object} options - The options provided. Supports cache: true if the original cache was false and returnData: true if you want the data to be returned
+       * @returns {null | boolean | any} The result of the operation or the data if returnData is true
        * @throws {TypeError} If no key or value was specified
        **/
       this.add = async function (
         key: string,
         value: number | string | object,
-        options: { cache: boolean }
+        options: { cache: boolean; returnData: boolean }
       ): Promise<null | boolean> {
         if (!key)
           throw new TypeError(
@@ -365,7 +369,10 @@ export = {
           throw new TypeError(
             "Must specify value to add. Need Help ? Visit pogy.xyz/support"
           );
+
+        const initialKey = key;
         let targetProvided: string;
+
         if (key.includes(".")) {
           let unparsedTarget = key.split(".");
           key = unparsedTarget.shift();
@@ -451,21 +458,23 @@ export = {
           );
         }
 
-        return true;
+        if (options && options.returnData) {
+          return await this.get(initialKey, options);
+        } else return true;
       };
 
       /**
        * @info Subtract a value from a key in the table
        * @param {string} key - The key to subtract the value to
        * @param {string | object | number} value - The value to subtract from the key
-       * @param {object} options - The options provided. Supports cache: true if the original cache was false
-       * @returns {null | boolean} The result of the operation
+       *  @param {object} options - The options provided. Supports cache: true if the original cache was false and returnData: true if you want the data to be returned
+       * @returns {null | boolean | any} The result of the operation or the data if returnData is true
        * @throws {TypeError} If no key or value was specified
        **/
       this.subtract = async function (
         key: string,
         value: string | object | number,
-        options: { cache: boolean }
+        options: { cache: boolean; returnData: boolean }
       ): Promise<null | boolean> {
         if (!key)
           throw new TypeError(
@@ -475,7 +484,10 @@ export = {
           throw new TypeError(
             "Must specify value to subtract. Need Help ? Visit pogy.xyz/support"
           );
+
+        const initialKey = key;
         let targetProvided: string;
+
         if (key.includes(".")) {
           let unparsedTarget = key.split(".");
           key = unparsedTarget.shift();
@@ -561,7 +573,9 @@ export = {
           );
         }
 
-        return true;
+        if (options && options.returnData) {
+          return await this.get(initialKey, options);
+        } else return true;
       };
 
       /**
@@ -653,14 +667,14 @@ export = {
        * @info Push or create a value to an array in the table
        * @param {string} key - The key to push the value to
        * @param {string | object | number} value - The value to push to the key
-       * @param {object} options - The options provided. Supports cache: true if the original cache was false
-       * @returns {boolean} The result of the operation
+       * @param {object} options - The options provided. Supports cache: true if the original cache was false and returnData: true if you want the data to be returned
+       * @returns {null | boolean | any} The result of the operation or the data if returnData is true
        * @throws {TypeError} If no key or value was specified
        **/
       this.push = async function (
         key: string,
         value: string | object | number,
-        options: { cache: boolean }
+        options: { cache: boolean; returnData: boolean }
       ): Promise<boolean> {
         if (!key)
           throw new TypeError(
@@ -670,6 +684,9 @@ export = {
           throw new TypeError(
             "No value specified. Need Help ? Visit pogy.xyz/support"
           );
+
+        const initialKey = key;
+
         let targetProvided: string;
         if (key.includes(".")) {
           let unparsedTarget = key.split(".");
@@ -711,21 +728,24 @@ export = {
                 );
             }
           });
-        return true;
+
+        if (options && options.returnData) {
+          return await this.get(initialKey, options);
+        } else return true;
       };
 
       /**
        * @info Remove a value from an array in the table
        * @param {string} key - The key to remove the value from the array
        * @param {string | object | number} value - The value to remove to the key
-       * @param {object} options - The options provided. Supports cache: true if the original cache was false
-       * @returns {boolean} The result of the operation
+       * @param {object} options - The options provided. Supports cache: true if the original cache was false and returnData: true if you want the data to be returned
+       * @returns {null | boolean | any} The result of the operation or the data if returnData is true
        * @throws {TypeError} If no key or value was specified
        **/
       this.pull = async function (
         key: string,
         value: string | object | number,
-        options: { cache: boolean }
+        options: { cache: boolean; returnData: true }
       ): Promise<boolean> {
         if (!key)
           throw new TypeError(
@@ -735,7 +755,10 @@ export = {
           throw new TypeError(
             "No value specified. Need Help ? Visit pogy.xyz/support"
           );
+
+        const initialKey = key;
         let targetProvided: string;
+
         if (key.includes(".")) {
           let unparsedTarget = key.split(".");
           key = unparsedTarget.shift();
@@ -776,7 +799,10 @@ export = {
                 );
             }
           });
-        return true;
+
+        if (options && options.returnData) {
+          return await this.get(initialKey, options);
+        } else return true;
       };
 
       /**

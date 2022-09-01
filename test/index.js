@@ -1,7 +1,6 @@
 const db = require("../lib/index"),
   url = process.argv[2].replace("--", "");
 
-
 async function test() {
   if (!url) {
     throw new Error(
@@ -26,6 +25,9 @@ async function test() {
 
       await schema.push("test.tests", "test");
       console.log("Pushed test to tests array");
+
+      await schema.pull("test.tests", "test");
+      console.log("Pulled test from tests array");
 
       await schema.add("test.testCount", 1);
       console.log("Added 1 to testCount");

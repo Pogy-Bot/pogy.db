@@ -53,34 +53,42 @@ async function start() {
     /* 
      Setting an object in the database:
      creates { id: "710465231779790849", username: "Peter_#4444" } in "discord"
-     returns true if successful
+     @returns {null | boolean | any} The result of the operation or the data if returnData is true
    */
-    await schema.set("discord", {
-      id: "710465231779790849",
-      username: "Peter_#4444",
-    });
+    await schema.set(
+      "discord",
+      {
+        id: "710465231779790849",
+        username: "Peter_#4444",
+      },
+      {
+        returnData: true, //if false it will return true if successful
+      }
+    );
 
     /* 
      Pushing an element to an array in the database:
-     returns true if successful
+     @returns {null | boolean | any} The result of the operation or the data if returnData is true
     */
     await schema.push("discord.badges", "verified");
 
     /* 
      Pulling / Removing an element from an array in the database:
-     returns true if successful
+     @returns {null | boolean | any} The result of the operation or the data if returnData is true
     */
     await schema.pull("discord.badges", "verified");
 
     /* 
       Add a value (number) to a key in the database
       discord.message_count will be incremented by 1 which should now give 1
+      @returns {null | boolean | any} The result of the operation or the data if returnData is true
     */
     await schema.add("discord.message_count", 1);
 
     /* 
       Subtract a value (number) in the database
       discord.message_count will be decremented by 1 which should now give 0
+      @returns {null | boolean | any} The result of the operation or the data if returnData is true
     */
     await schema.subtract("discord.message_count", 1);
 
@@ -92,7 +100,7 @@ async function start() {
 
     /* 
       Get the value of a key in the database (boolean)
-      returns true
+      returns true 
     */
     await schema.has("discord.badges"); // -> true
 
@@ -266,7 +274,7 @@ if (users) {
     set(key, value)
     @param {string} key - The key to set.
     @param {object | string | number} value - The value to set.
-    @returns {boolean} - Whether or not the operation was successful.
+    @returns {null | boolean | any} The result of the operation or the data if returnData is true
   */
   await users.set(message.author.id, {
     username: message.author.username,
@@ -308,7 +316,7 @@ This function is used to set the value of a key in the database.
   set(key, value)
   @param {string} key - The key to set.
   @param {object | string | number} value - The value to set.
-  @returns {boolean} - Whether or not the operation was successful.
+  @returns {null | boolean | any} The result of the operation or the data if returnData is true
 */
 await users.set(`${message.author.id}.username`, "Peter_#4444"); // -> true
 ```
@@ -322,7 +330,7 @@ This function is used to add a number to a key in the database.
   add(key, number)
   @param {string} key - The key to add to.
   @param {number} number - The number to add | 0 if not specified.
-  @returns {boolean} - Whether or not the operation was successful.
+  @returns {null | boolean | any} The result of the operation or the data if returnData is true
 */
 await users.add(`${message.author.id}.message_count`, 1);
 
@@ -345,7 +353,7 @@ This function is used to subtract a number from a key in the database.
   subtract(key, number)
   @param {string} key - The key to subtract to.
   @param {number} number - The number to subtract | 0 if not specified.
-  @returns {boolean} - Whether or not the operation was successful.
+  @returns {null | boolean | any} The result of the operation or the data if returnData is true
 */
 await users.subtract(`${message.author.id}.message_count`, 1);
 
@@ -408,7 +416,7 @@ This function is used to push an element to an array in the database or create a
   push(key, element)
   @param {string} key - The key to push to.
   @param {object} element - The element to push.
-  @returns {boolean} -  Whether or not the operation was successful.
+  @returns {null | boolean | any} The result of the operation or the data if returnData is true
 */
 await users.push(`${message.author.id}.badges`, "bot_owner"); // -> true
 // array becomes ['verified', 'bot_owner']
