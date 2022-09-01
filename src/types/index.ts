@@ -40,6 +40,7 @@ export type CustomizedTable = {
   has: (key: string) => Promise<boolean>;
   delete: (key: string) => Promise<boolean>;
   push: (key: string, value: string | object | number) => Promise<boolean>;
+  pull: (key: string, value: string | object | number) => Promise<boolean>;
   all: (options?: TableAllOptions) => Promise<object>;
   drop: () => Promise<boolean>;
 };

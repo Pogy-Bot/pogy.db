@@ -67,6 +67,12 @@ async function start() {
     await schema.push("discord.badges", "verified");
 
     /* 
+     Pulling / Removing an element from an array in the database:
+     returns true if successful
+    */
+    await schema.pull("discord.badges", "verified");
+
+    /* 
       Add a value (number) to a key in the database
       discord.message_count will be incremented by 1 which should now give 1
     */
@@ -150,6 +156,7 @@ async function start() {
     // table.add(key, value, {cache: true})
     // table.subtract(key, value, {cache: true})
     // table.push(key, value, {cache: true})
+    // table.pull(key, value, {cache: true})
   }
 }
 

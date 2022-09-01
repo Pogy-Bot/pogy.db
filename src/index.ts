@@ -715,6 +715,71 @@ export = {
       };
 
       /**
+       * @info Remove a value from an array in the table
+       * @param {string} key - The key to remove the value from the array
+       * @param {string | object | number} value - The value to remove to the key
+       * @param {object} options - The options provided. Supports cache: true if the original cache was false
+       * @returns {boolean} The result of the operation
+       * @throws {TypeError} If no key or value was specified
+       **/
+      this.pull = async function (
+        key: string,
+        value: string | object | number,
+        options: { cache: boolean }
+      ): Promise<boolean> {
+        if (!key)
+          throw new TypeError(
+            "No key specified. Need Help ? Visit pogy.xyz/support"
+          );
+        if (!value && value != 0)
+          throw new TypeError(
+            "No value specified. Need Help ? Visit pogy.xyz/support"
+          );
+        let targetProvided: string;
+        if (key.includes(".")) {
+          let unparsedTarget = key.split(".");
+          key = unparsedTarget.shift();
+          targetProvided = unparsedTarget.join(".");
+        }
+
+        await this.table
+          .updateOne(
+            { id: key },
+            {
+              $pull: {
+                [targetProvided ? "data." + targetProvided : "data"]: value,
+              },
+            },
+            { upsert: true }
+          )
+          .then(async () => {
+            let fetchedData = (await this.table.findOne({ id: key })).data;
+            if (targetProvided) {
+              fetchedData = _.get(fetchedData, targetProvided);
+
+              if (options && options.cache) DatabaseManager.enableCache();
+              if (DatabaseManager.cache || (options && options.cache))
+                DatabaseManager.cache.set(
+                  this.table.name + "." + key + "." + targetProvided,
+                  fetchedData
+                );
+            } else {
+              if (
+                (DatabaseManager.cache &&
+                  tableOptions &&
+                  tableOptions.cacheLargeData) ||
+                (options && options.cache)
+              )
+                DatabaseManager.cache.set(
+                  this.table.name + "." + key,
+                  fetchedData
+                );
+            }
+          });
+        return true;
+      };
+
+      /**
        * @info Fetch all the schemas from the table
        * @param {TableAllOptions} options - The options to fetch the schemas with
        * @returns {object} The schemas from the table
