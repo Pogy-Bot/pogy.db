@@ -24,23 +24,26 @@ export type TableAllOptions = {
 
 export type CustomizedTable = {
   table: Collection;
-  get: (key: string) => Promise<null | string | object | number>;
+  get: (key: string, options?: { cache: boolean }) => Promise<null | string | object | number>;
   set: (
     key: string,
-    value: string | object | number
+    value: string | object | number,
+    options?: { cache?: boolean; returnData?: boolean }
   ) => Promise<null | boolean>;
   add: (
     key: string,
-    value: string | object | number
+    value: string | object | number,
+    options?: { cache?: boolean; returnData?: boolean }
   ) => Promise<null | boolean>;
   subtract: (
     key: string,
-    value: string | object | number
+    value: string | object | number,
+    options?: { cache?: boolean; returnData?: boolean }
   ) => Promise<null | boolean>;
   has: (key: string) => Promise<boolean>;
   delete: (key: string) => Promise<boolean>;
-  push: (key: string, value: string | object | number) => Promise<boolean>;
-  pull: (key: string, value: string | object | number) => Promise<boolean>;
+  push: (key: string, value: string | object | number, options?: { cache?: boolean; returnData?: boolean }) => Promise<boolean>;
+  pull: (key: string, value: string | object | number, options?: { cache?: boolean; returnData?: boolean }) => Promise<boolean>;
   all: (options?: TableAllOptions) => Promise<object>;
   drop: () => Promise<boolean>;
 };

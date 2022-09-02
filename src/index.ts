@@ -199,7 +199,7 @@ export = {
    */
   table: function (
     tableName: string,
-    tableOptions: {
+    tableOptions?: {
       cacheLargeData?: boolean;
       catchErrors?: boolean;
     }
@@ -230,7 +230,7 @@ export = {
        */
       this.get = async function (
         key: string,
-        options: { cache: boolean }
+        options?: { cache: boolean }
       ): Promise<null | string | object | number> {
         try {
           if (!key)
@@ -302,7 +302,7 @@ export = {
       this.set = async function (
         key: string,
         value: string | object | number,
-        options: { cache: boolean; returnData: boolean }
+        options?: { cache?: boolean; returnData?: boolean }
       ): Promise<null | boolean> {
         try {
           if (!key)
@@ -381,7 +381,7 @@ export = {
       this.add = async function (
         key: string,
         value: number | string | object,
-        options: { cache: boolean; returnData: boolean }
+        options?: { cache?: boolean; returnData?: boolean }
       ): Promise<null | boolean> {
         try {
           if (!key)
@@ -511,7 +511,7 @@ export = {
       this.subtract = async function (
         key: string,
         value: string | object | number,
-        options: { cache: boolean; returnData: boolean }
+        options?: { cache?: boolean; returnData?: boolean }
       ): Promise<null | boolean> {
         try {
           if (!key)
@@ -744,7 +744,7 @@ export = {
       this.push = async function (
         key: string,
         value: string | object | number,
-        options: { cache: boolean; returnData: boolean }
+        options?: { cache?: boolean; returnData?: boolean }
       ): Promise<boolean> {
         try {
           if (!key)
