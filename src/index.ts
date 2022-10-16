@@ -194,7 +194,7 @@ export = {
   /**
    * Get a table from the database
    * @param {string} table - The name of the table
-   * @returns {CustomizedTable | boolean} The table object
+   * @returns {CustomizedTable | any} The table object
    * @throws {TypeError} If the table encounters an error
    */
   table: function (
@@ -203,7 +203,7 @@ export = {
       cacheLargeData?: boolean;
       catchErrors?: boolean;
     }
-  ): Promise<CustomizedTable> {
+  ): Promise<CustomizedTable | any> {
     return (async () => {
       if (!DatabaseManager.client) return false;
       if (typeof tableName !== "string")
@@ -225,13 +225,13 @@ export = {
        * @info Get the value of a key from the table
        * @param {string} key - The key to get the value of
        * @param {object} options - The options provided. Supports cache: true if the original cache was false
-       * @returns {null | string | object | number} The value of the key
+       * @returns {null | string | object | number | any} The value of the key
        * @throws {TypeError} If no key was specified
        */
       this.get = async function (
         key: string,
         options?: { cache: boolean }
-      ): Promise<null | string | object | number> {
+      ): Promise<null | string | object | number | any> {
         try {
           if (!key)
             throw new TypeError(
@@ -254,7 +254,7 @@ export = {
               key = unparsedTarget.shift();
               targetProvided = unparsedTarget.join(".");
             }
-            
+
             fetchedData = await this.table.findOne({ id: key });
             if (!fetchedData) {
               return null;
@@ -296,14 +296,14 @@ export = {
        * @param {string} key - The key to set the value of
        * @param {string | object | number} value - The value to set the key to
        * @param {object} options - The options provided. Supports cache: true if the original cache was false and returnData: true if you want the data to be returned
-       * @returns {null | boolean | any} The result of the operation or the data if returnData is true
+       * @returns {null | boolean | any} The result of the operation or the data if returnData is true, null for errors
        * @throws {TypeError} If no key or value was specified
        **/
       this.set = async function (
         key: string,
         value: string | object | number,
         options?: { cache?: boolean; returnData?: boolean }
-      ): Promise<null | boolean> {
+      ): Promise<null | boolean | any> {
         try {
           if (!key)
             throw new TypeError(
@@ -366,7 +366,7 @@ export = {
               label: "Table",
             });
           }
-          return false;
+          return null;
         }
       };
 
@@ -375,14 +375,14 @@ export = {
        * @param {string} key - The key to add the value to
        * @param {number | string | object} value - The value to add to the key
        * @param {object} options - The options provided. Supports cache: true if the original cache was false and returnData: true if you want the data to be returned
-       * @returns {null | boolean | any} The result of the operation or the data if returnData is true
+       * @returns {null | boolean | any} The result of the operation or the data if returnData is true, null for errors
        * @throws {TypeError} If no key or value was specified
        **/
       this.add = async function (
         key: string,
         value: number | string | object,
         options?: { cache?: boolean; returnData?: boolean }
-      ): Promise<null | boolean> {
+      ): Promise<null | boolean | any> {
         try {
           if (!key)
             throw new TypeError(
@@ -496,7 +496,7 @@ export = {
               label: "Table",
             });
           }
-          return false;
+          return null;
         }
       };
 
@@ -505,14 +505,14 @@ export = {
        * @param {string} key - The key to subtract the value to
        * @param {string | object | number} value - The value to subtract from the key
        * @param {object} options - The options provided. Supports cache: true if the original cache was false and returnData: true if you want the data to be returned
-       * @returns {null | boolean | any} The result of the operation or the data if returnData is true
+       * @returns {null | boolean | any} The result of the operation or the data if returnData is true, null for errors
        * @throws {TypeError} If no key or value was specified
        **/
       this.subtract = async function (
         key: string,
         value: string | object | number,
         options?: { cache?: boolean; returnData?: boolean }
-      ): Promise<null | boolean> {
+      ): Promise<null | boolean | any> {
         try {
           if (!key)
             throw new TypeError(
@@ -626,7 +626,7 @@ export = {
               label: "Table",
             });
           }
-          return false;
+          return null;
         }
       };
 
@@ -636,7 +636,7 @@ export = {
        * @returns {boolean | null} The result of the operation or null if an error occured
        * @throws {TypeError} If no key was specified
        **/
-      this.has = async function (key: string): Promise<boolean> {
+      this.has = async function (key: string): Promise<boolean | null> {
         try {
           if (!key)
             throw new TypeError(
@@ -670,10 +670,10 @@ export = {
       /**
        * @info Delete a key from the table
        * @param {string} key - The key to delete
-       * @returns {boolean} The result of the operation
+       * @returns {boolean | null} The result of the operation, null if the table was not found or an error occured
        * @throws {TypeError} If no key was specified or the traget provided is not an object
        **/
-      this.delete = async function (key: string): Promise<boolean> {
+      this.delete = async function (key: string): Promise<boolean | null> {
         try {
           if (!key)
             throw new TypeError(
@@ -729,7 +729,7 @@ export = {
               label: "Table",
             });
           }
-          return false;
+          return null;
         }
       };
 
@@ -738,14 +738,14 @@ export = {
        * @param {string} key - The key to push the value to
        * @param {string | object | number} value - The value to push to the key
        * @param {object} options - The options provided. Supports cache: true if the original cache was false and returnData: true if you want the data to be returned
-       * @returns {null | boolean | any} The result of the operation or the data if returnData is true
+       * @returns {null | boolean | any} The result of the operation or the data if returnData is true, null for errors
        * @throws {TypeError} If no key or value was specified
        **/
       this.push = async function (
         key: string,
         value: string | object | number,
         options?: { cache?: boolean; returnData?: boolean }
-      ): Promise<boolean> {
+      ): Promise<null | boolean | any> {
         try {
           if (!key)
             throw new TypeError(
@@ -809,7 +809,7 @@ export = {
               label: "Table",
             });
           }
-          return false;
+          return null;
         }
       };
 
@@ -818,14 +818,14 @@ export = {
        * @param {string} key - The key to remove the value from the array
        * @param {string | object | number} value - The value to remove to the key
        * @param {object} options - The options provided. Supports cache: true if the original cache was false and returnData: true if you want the data to be returned
-       * @returns {null | boolean | any} The result of the operation or the data if returnData is true
+       * @returns {null | boolean | any} The result of the operation or the data if returnData is true, null for errors
        * @throws {TypeError} If no key or value was specified
        **/
       this.pull = async function (
         key: string,
         value: string | object | number,
         options: { cache: boolean; returnData: true }
-      ): Promise<boolean> {
+      ): Promise<null | boolean | any> {
         try {
           if (!key)
             throw new TypeError(
@@ -889,17 +889,17 @@ export = {
               label: "Table",
             });
           }
-          return false;
+          return null;
         }
       };
 
       /**
        * @info Fetch all the schemas from the table
        * @param {TableAllOptions} options - The options to fetch the schemas with
-       * @returns {object} The schemas from the table
+       * @returns {object | any} The schemas from the table
        * @throws {TypeError} If no key was specified
        **/
-      this.all = async function (options?: TableAllOptions): Promise<object> {
+      this.all = async function (options?: TableAllOptions): Promise<object | any> {
         try {
           let fetchedData = await this.table.find().toArray();
           if (options && options.documentForm) {
@@ -923,10 +923,10 @@ export = {
 
       /**
        * @info Delete all the schemas from the table
-       * @returns {boolean} The result of the operation
+       * @returns {boolean} The result of the operation, null if an error occured
        * @throws {TypeError} If no key was specified
        **/
-      this.drop = async function (): Promise<boolean> {
+      this.drop = async function (): Promise<boolean | null> {
         try {
           if (DatabaseManager.cache) {
             DatabaseManager.cache.forEach((_, key) => {
@@ -943,7 +943,7 @@ export = {
               label: "Table",
             });
           }
-          return false;
+          return null;
         }
       };
 
@@ -952,10 +952,10 @@ export = {
   } as any as {
     new (
       tableName: string,
-      tableOptions: {
+      tableOptions?: {
         cacheLargeData?: boolean;
         catchErrors?: boolean;
       }
-    ): Promise<CustomizedTable>;
+    ): Promise<CustomizedTable | any>;
   },
 };

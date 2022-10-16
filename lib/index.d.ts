@@ -34,12 +34,12 @@ declare const _default: {
     /**
      * Get a table from the database
      * @param {string} table - The name of the table
-     * @returns {CustomizedTable | boolean} The table object
+     * @returns {CustomizedTable | any} The table object
      * @throws {TypeError} If the table encounters an error
      */
-    table: new (tableName: string, tableOptions: {
+    table: new (tableName: string, tableOptions?: {
         cacheLargeData?: boolean;
         catchErrors?: boolean;
-    }) => Promise<CustomizedTable>;
+    }) => Promise<CustomizedTable | any>;
 };
 export = _default;
