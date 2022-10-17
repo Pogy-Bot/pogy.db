@@ -7,10 +7,11 @@ Pogy.db is a mongoose **(v.6.5.2)** based database which is used in Pogy. Our da
 
 - Endured storage, your data doesn't disappear on restarts.
 - Migrations, to backup your data every once in a while.
-- Caching, to speed up your queries.
+- Caching using Maps or Redis, to speed up your queries.
 - Logging, get a log of when the database gets online, or offline.
 - Ping, check the execution time of your queries.
 - Fully customizable, you can customize your database options as you want.
+- Built in support for Redis, that means you move from Maps to Redis as your application grows.
 
 ## Download
 
@@ -35,6 +36,9 @@ async function start() {
       cache: true,
       hidelogs: false,
       logFile: "./logs/database.log",
+      redis: {
+        url: "redis://localhost:6379", // redis connection url (optional, if not specified, cache will be stored using Maps)
+      }
     },
     {
       keepAlive: true,
@@ -45,14 +49,16 @@ async function start() {
     }
   );
 
-  // Create a table or what you call as a collection, this will create a table called "users" if its not already created.
+  // Create a table or what you call as a collection
+  // this will create a table called "users" if its not already created.
+  // if it is already created, it will just return the table.
   const schema = await new database.table("users", {
     catchErrors: true, // logs errors if there's an error in the function
   });
 
   // if the schema is available and the database is connected
   if (schema) {
-    /* 
+    /*
      Setting an object in the database:
      creates { id: "710465231779790849", username: "Peter_#4444" } in "discord"
      @returns {null | boolean | any} The result of the operation or the data if returnData is true
@@ -68,58 +74,60 @@ async function start() {
       }
     );
 
-    /* 
+    /*
      Pushing an element to an array in the database:
      @returns {null | boolean | any} The result of the operation or the data if returnData is true
     */
     await schema.push("discord.badges", "verified");
 
-    /* 
+    /*
      Pulling / Removing an element from an array in the database:
      @returns {null | boolean | any} The result of the operation or the data if returnData is true
     */
     await schema.pull("discord.badges", "verified");
 
-    /* 
+    /*
       Add a value (number) to a key in the database
       discord.message_count will be incremented by 1 which should now give 1
       @returns {null | boolean | any} The result of the operation or the data if returnData is true
     */
     await schema.add("discord.message_count", 1);
 
-    /* 
+    /*
       Subtract a value (number) in the database
       discord.message_count will be decremented by 1 which should now give 0
       @returns {null | boolean | any} The result of the operation or the data if returnData is true
     */
     await schema.subtract("discord.message_count", 1);
 
-    /* 
+    /*
       Get the value of a key in the database
       returns ["verified"]
     */
     await schema.get("discord.badges");
 
-    /* 
+    /*
       Get the value of a key in the database (boolean)
-      returns true 
+      returns true
     */
     await schema.has("discord.badges"); // -> true
 
-    /* 
+    /*
       Get the value of a key in the database (boolean)
       returns true
     */
     await schema.delete("discord.badges");
 
-    /* 
+    /*
       Returns all the schemas in the table
       { id: "710465231779790849", username: "Peter_#4444", message_count: 0 }
       options available: documentForm (boolean) -> returns the object as document arrays used for migrations
     */
-    await schema.all();
+    await schema.all({
+      documentForm: true or false
+    });
 
-    /* 
+    /*
      Drop/delete the table from the database, boolean.
      returns true
     */
@@ -136,7 +144,7 @@ async function start() {
       id: "710465231779790849",
       username: "Peter_#4444",
       message_count: 0,
-    }); // this will cache "discord" with the whole object, so if your schema small you can turn it on, but if its big we recommend you turn it off.
+    }); // this will cache "discord" with the whole object, so if your schema is small you can turn it on, but if its big we recommend you turn it off as it will overload your memory.
 
     // this applies to all functions like add, subtract, set, get, has, delete, push... You don't want to cache large data its better to cache small data like something.data.value rather than all the "something" object.
 
@@ -179,12 +187,13 @@ start();
 You can test all the functions at once by typing:
 
 ```bash
-node test --url
+node test --mongoURL --redisURL
 ```
 
-but replace "url" with the url of your database.
+but replace "mongoURL" with the url of your database and "redisURL" (OPTIONAL) with the url of your redis server.
 
-- example: `npm test --mongodb://localhost:27017/test`
+- example: `npm test --mongodb://localhost:27017/test --redis://localhost:6379`
+- - No Redis: `npm test --mongodb://localhost:27017/test`
 
 ## Documentation
 
@@ -213,11 +222,15 @@ options = {
   cache: true, // Whether or not to cache the data.
   hidelogs: false, // Whether or not to hide the logs.
   logFile: "./logs/database.log", // The file to log to.
+  redis: {
+    url: "redis://localhost:6379", // The url to the redis server.
+  },
 };
 
 //if you don't want to log anything
 options = {
   cache: true,
+  redis: false, // redis is disabled, so cache will be using Maps
 };
 
 // default mongooseOptions
@@ -233,7 +246,7 @@ mongooseOptions = {
 };
 ```
 
-So, connecting yo your database would be
+So, connecting your database would be
 
 ```js
 const database = require("pogy.db");
@@ -245,6 +258,9 @@ await database.connect(
     cache: true, // cache the data
     hidelogs: false, // don't hide the logs
     logFile: "./logs/database.log", // log to the database events in logs/database.log
+    redis: {
+      url: "redis://localhost:6379", // The url to the redis server.
+    },
   },
   {
     // mongoose options
@@ -293,7 +309,7 @@ if (users) {
   /*
     get(key)
     @param {string} key - The key to get.
-    @returns {object | string | undefined} - The value of the key.
+    @returns {object | string | undefined | any} - The value of the key.
   */
   const username = await users.get(`${message.author.id}.username`);
   console.log(username); // -> "Peter_#4444"
@@ -342,7 +358,7 @@ await users.add(`${message.author.id}.message_count`, 1);
 /*
   get(key)
   @param {string} key - The key to get.
-  @returns {object | string | undefined} - The value of the key.
+  @returns {object | string | undefined | any} - The value of the key.
 */
 
 const messageCount = await users.get(`${message.author.id}.message_count`);
@@ -365,7 +381,7 @@ await users.subtract(`${message.author.id}.message_count`, 1);
 /*
   get(key)
   @param {string} key - The key to get.
-  @returns {object | string | undefined} - The value of the key.
+  @returns {object | string | undefined | any} - The value of the key.
 */
 
 const messageCount = await users.get(`${message.author.id}.message_count`);
@@ -423,8 +439,10 @@ This function is used to push an element to an array in the database or create a
   @param {object} element - The element to push.
   @returns {null | boolean | any} The result of the operation or the data if returnData is true
 */
-await users.push(`${message.author.id}.badges`, "bot_owner"); // -> true
-// array becomes ['verified', 'bot_owner']
+await users.push(`${message.author.id}.badges`, "bot_owner", {
+  returnData: false,
+}); // -> true
+// array becomes ['verified', 'bot_owner'] if returnData: true
 ```
 
 ### drop()
@@ -534,6 +552,7 @@ if the table is found it will return:
   "dataToGet": "710465231779790849", // the data requested
   "timeToGetTable": 0.03450000286102295, // the time taken to get the table in ms
   "timeToGetData": 0.011600017547607422, // the time taken to get the data in ms
+  "redisPing": 1.380900003015995, // the time taken to ping redis, if redis is enabled
   "totalPing": 0.04610002040863037 // the total ping (table and data) in ms
 }
 ```
@@ -563,12 +582,15 @@ const DatabaseManager = database.DatabaseManager;
 DatabaseManager.client; // the mongoose client, returns null if mongoose is not connected.
 DatabaseManager.cache; // the cache, returns null if the cache is not enabled.
 DatabaseManager.tables; // the tables, returns an empty array if no tables are created.
-DatabaseManager.events; // the event emitter, databaseUp or databaseUp
+DatabaseManager.events; // the event emitter, databaseUp or databaseDown
+DatabaseManager.redis; // the redis client, returns null if redis is not connected.
 ```
 
 #### How is this useful?
 
 You can use this to check for instance if the database is connected.
+
+<code>TIP: If you're using redis, and redis somehow disconnects, the database will carry on until redis is reconnected.</code>
 
 ```js
 const DiscordClient = require("discord.js");
@@ -602,6 +624,62 @@ const database = require("pogy.db");
 console.log(database.isOnline()); // true or false
 
 ```
+
+## Detailed Events
+
+If you want to keep track of your events you may use.
+
+```js
+(require("pogy.db").DatabaseManager.events).on("eventName", (data) => {
+  console.log(data) // the event data
+}
+```
+
+#### For Mongoose
+
+<table>
+  <tr>
+    <th>Event</th>
+    <th>Description</th>
+  </tr>
+  <tr>
+    <td>databaseUp</td>
+    <td>Emitted when the database is up.</td>
+  </tr>
+  <tr>
+    <td>databaseDown</td>
+    <td>Emitted when the database is down.</td>
+  </tr>
+</table>
+
+#### For Redis
+
+<table>
+  <tr>
+    <th>Event</th>
+    <th>Description</th>
+  </tr>
+  <tr>
+    <td>redisConnecting</td>
+    <td>Emitted when redis is connecting on startup.</td>
+  </tr>
+  <tr>
+    <td>redisConnected</td>
+    <td>Emitted when redis is ready and connected.</td>
+  </tr>
+    <tr>
+    <td>redisEnd</td>
+    <td>Emitted when redis is unexpectedly closed using `DatabaseManager.redis.disconnect()` or `DatabaseManager.redis.quit()`</td>
+  </tr>
+    <tr>
+    <td>redisError</td>
+    <td>Emitted when redis encounters an error.</td>
+  </tr>
+    <tr>
+    <td>redisReconnecting</td>
+    <td>Emitted when redis is reconnecting.</td>
+  </tr>
+</table>
 
 ## Enabling Migrations
 

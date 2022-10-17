@@ -22,7 +22,7 @@ const logger = createLogger({
   levels: myCustomLevels.levels,
   format: combine(
     format.colorize(),
-    format.timestamp({ format: "YYYY-MM-DD HH:mm:ss" }),
+    format.timestamp({ format: "MM-DD HH:mm:ss" }),
     myFormat
   ),
   transports: [new transports.Console()],

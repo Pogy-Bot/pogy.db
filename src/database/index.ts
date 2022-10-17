@@ -2,18 +2,42 @@ import mongoose from "mongoose";
 import { logger, setLogFile } from "../logger";
 import { Options } from "../types";
 import { EventEmitter } from "events";
+import {
+  createClient,
+  RedisClientType,
+  RedisFunctions,
+  RedisModules,
+  RedisScripts,
+} from "redis";
 
 class DatabaseManager {
   public mongoClient: mongoose.Connection | null;
+  public redisClient: RedisClientType<
+    RedisModules,
+    RedisFunctions,
+    RedisScripts
+  > | null;
   public mongoTables: string[];
-  public mongoCache: Map<string, any> | null;
-  static cache: Map<any, any>;
+  public mongoCache:
+    | Map<string, any>
+    | RedisClientType<RedisModules, RedisFunctions, RedisScripts>
+    | null;
+  static cache:
+    | Map<string, any>
+    | RedisClientType<RedisModules, RedisFunctions, RedisScripts>
+    | any;
+  public redisClientURL: string | null;
   static client: mongoose.Connection | null;
+  static redis:
+    | RedisClientType<RedisModules, RedisFunctions, RedisScripts>
+    | any;
   static tables: string[];
   static events = new EventEmitter();
+  static redisURL: string;
 
   constructor() {
     this.mongoClient = null;
+    this.redisClient = null;
     this.mongoTables = [];
     this.mongoCache = null;
   }
@@ -42,6 +66,22 @@ class DatabaseManager {
     this.mongoCache = value;
   }
 
+  get redis() {
+    return this.redisClient;
+  }
+
+  set redis(value) {
+    this.redisClient = value;
+  }
+
+  get redisURL() {
+    return this.redisClientURL;
+  }
+
+  set redisURL(url: string) {
+    this.redisClientURL = url;
+  }
+
   /**
    * It connects to a mongo database and sets up some listeners for the connection.
    * @returns The mongoClient object.
@@ -52,6 +92,8 @@ class DatabaseManager {
     databaseOptions?: mongoose.ConnectOptions
   ) {
     try {
+      if (options && options.redis && options.redis.url)
+        this.redisURL = options.redis.url;
       if (options && options.logFile) setLogFile(options.logFile);
       if (options && options.cache) this.enableCache();
       const mongo = mongoose;
@@ -137,7 +179,73 @@ class DatabaseManager {
   }
 
   static async enableCache() {
-    if(!this.cache) this.cache = new Map();
+    if (this.redisURL) {
+      const client = createClient({
+        url: this.redisURL,
+      });
+
+      client.on("connect", () => {
+        this.events.emit("redisConnecting", {
+          reason: "CONNECTING - The redis server connecting.",
+          date: Date.now(),
+        });
+        logger.info(`Redis connection connecting`, { label: "Redis" });
+      });
+      client.on("ready", () => {
+        this.events.emit("redisConnected", {
+          reason: "CONNECTED - The redis server connected.",
+          date: Date.now(),
+        });
+        logger.info(`Redis connection connected`, { label: "Redis" });
+        this.cache = client;
+        this.redis = client;
+      });
+      client.on("end", () => {
+        this.events.emit("redisEnd", {
+          reason: "END - The redis server disconnected.",
+          date: Date.now(),
+        });
+        logger.error(
+          `Redis connection disconnected using .disconnect() or .quit()`,
+          {
+            label: "Redis",
+          }
+        );
+        this.cache = null;
+        this.redis = client;
+      });
+      client.on("error", (err) => {
+        if (this.cache) {
+          this.events.emit("redisError", {
+            reason:
+              "ERROR - The redis server encountered an error. ERROR: " +
+              err.message,
+            date: Date.now(),
+          });
+          console.log(err);
+          logger.error(`Redis connection error`, {
+            label: "Redis",
+          });
+          this.cache = null;
+          this.redis = client;
+        }
+      });
+      client.on("reconnecting", () => {
+        if (this.cache) {
+          this.events.emit("redisReconnecting", {
+            reason: "RECONNECTING - The redis server reconnecting.",
+            date: Date.now(),
+          });
+          logger.error(`Redis connection lost, trying to reconnect...`, {
+            label: "Redis",
+          });
+          this.cache = null;
+          this.redis = client;
+        }
+      });
+
+      await client.connect();
+    } else if (!this.cache) this.cache = new Map();
     return true;
   }
 }

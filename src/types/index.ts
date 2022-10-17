@@ -4,6 +4,9 @@ export type Options = {
   cache?: boolean;
   hidelogs?: boolean;
   logFile?: string;
+  redis?: {
+    url: string;
+  };
 };
 
 export type migrateOptions = {
@@ -66,4 +69,5 @@ export type PingResult = {
   timeToGetTable: number;
   timeToGetData: number;
   totalPing: number;
+  redisPing: number | string;
 };

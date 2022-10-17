@@ -4,7 +4,6 @@ package-lock.json
 .idea
 nbproject
 nbproject/private
-.vscode/
 .vs/
 node_modules/
 *.log
