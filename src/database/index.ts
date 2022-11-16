@@ -27,6 +27,7 @@ class DatabaseManager {
     | RedisClientType<RedisModules, RedisFunctions, RedisScripts>
     | any;
   public redisClientURL: string | null;
+  public options: Options | null;
   static client: mongoose.Connection | null;
   static redis:
     | RedisClientType<RedisModules, RedisFunctions, RedisScripts>
@@ -34,12 +35,14 @@ class DatabaseManager {
   static tables: string[];
   static events = new EventEmitter();
   static redisURL: string;
+  static options: Options;
 
   constructor() {
     this.mongoClient = null;
     this.redisClient = null;
     this.mongoTables = [];
     this.mongoCache = null;
+    this.options = null;
   }
 
   get client() {
@@ -168,6 +171,7 @@ class DatabaseManager {
         }
       );
 
+      this.options = options;
       return mongo.connection;
     } catch (err) {
       console.log(err);
@@ -247,6 +251,17 @@ class DatabaseManager {
       await client.connect();
     } else if (!this.cache) this.cache = new Map();
     return true;
+  }
+
+  static isCacheEnabled(options): boolean {
+    return options && options.cache === true
+      ? true
+      : false
+      ? true
+      : this.options.cache === true &&
+        (options ? options?.cache !== false : true)
+      ? true
+      : false;
   }
 }
 

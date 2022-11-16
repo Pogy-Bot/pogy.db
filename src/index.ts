@@ -99,6 +99,22 @@ export = {
       functions.map((f) => new Promise((resolve) => resolve(f())))
     );
 
+    if (!results[0]) {
+      logger.warn("The data or table was not found.", {
+        label: "Database",
+      });
+
+      return {
+        cached: DatabaseManager.cache ? true : false,
+        tableName: options.tableName,
+        dataToGet: options.dataToGet,
+        timeToGetTable: 0,
+        timeToGetData: 0,
+        redisPing: results[1],
+        totalPing: 0 + (typeof results[1] === "number" ? results[1] : 0),
+      };
+    }
+
     return {
       cached: DatabaseManager.cache ? true : false,
       tableName: options.tableName,
@@ -264,8 +280,11 @@ export = {
             );
 
           let fetchedData;
-          if (options && options.cache) DatabaseManager.enableCache();
-          if (DatabaseManager.cache) {
+          const isCacheEnabled = DatabaseManager.isCacheEnabled(options);
+          if (isCacheEnabled && !DatabaseManager.cache)
+            DatabaseManager.enableCache();
+
+          if (isCacheEnabled) {
             if (
               !DatabaseManager.redis &&
               DatabaseManager.cache.has(this.table.name + "." + key) === true
@@ -304,7 +323,7 @@ export = {
 
             if (targetProvided) {
               fetchedData = _.get(fetchedData, targetProvided);
-              if (DatabaseManager.cache || (options && options.cache)) {
+              if (isCacheEnabled) {
                 if (DatabaseManager.redis) {
                   if (typeof fetchedData === "object") {
                     try {
@@ -338,10 +357,9 @@ export = {
               }
             } else {
               if (
-                (DatabaseManager.cache &&
-                  tableOptions &&
-                  tableOptions.cacheLargeData) ||
-                (options && options.cache)
+                isCacheEnabled &&
+                tableOptions &&
+                tableOptions.cacheLargeData
               ) {
                 if (DatabaseManager.redis) {
                   if (typeof fetchedData === "object") {
@@ -436,9 +454,12 @@ export = {
             targetProvided = unparsedTarget.join(".");
           }
 
-          if (options && options.cache) DatabaseManager.enableCache();
+          const isCacheEnabled = DatabaseManager.isCacheEnabled(options);
+          if (isCacheEnabled && !DatabaseManager.cache)
+            DatabaseManager.enableCache();
+
           if (targetProvided) {
-            if (DatabaseManager.cache || (options && options.cache)) {
+            if (isCacheEnabled) {
               if (DatabaseManager.redis) {
                 if (typeof value === "object" && value) {
                   try {
@@ -481,12 +502,7 @@ export = {
               { upsert: true }
             );
           } else {
-            if (
-              (DatabaseManager.cache &&
-                tableOptions &&
-                tableOptions.cacheLargeData) ||
-              (options && options.cache)
-            ) {
+            if (isCacheEnabled && tableOptions && tableOptions.cacheLargeData) {
               if (DatabaseManager.redis) {
                 if (typeof value === "object" && value) {
                   try {
@@ -574,9 +590,12 @@ export = {
           if (isNaN(Number(value))) return true;
           value = parseInt(Number(value).toString());
 
-          if (options && options.cache) DatabaseManager.enableCache();
+          const isCacheEnabled = DatabaseManager.isCacheEnabled(options);
+          if (isCacheEnabled && !DatabaseManager.cache)
+            DatabaseManager.enableCache();
+
           if (targetProvided) {
-            if (DatabaseManager.cache || (options && options.cache)) {
+            if (isCacheEnabled) {
               if (DatabaseManager.redis) {
                 const addedVal = await this.get(
                   key + "." + targetProvided,
@@ -668,12 +687,7 @@ export = {
               );
             }
           } else {
-            if (
-              (DatabaseManager.cache &&
-                tableOptions &&
-                tableOptions.cacheLargeData) ||
-              (options && options.cache)
-            ) {
+            if (isCacheEnabled && tableOptions && tableOptions.cacheLargeData) {
               if (DatabaseManager.redis) {
                 const addedVal = await this.get(key, options);
                 if (addedVal) {
@@ -754,9 +768,12 @@ export = {
           if (isNaN(Number(value))) return true;
           value = ~parseInt(Number(value).toString()) + 1;
 
-          if (options && options.cache) DatabaseManager.enableCache();
+          const isCacheEnabled = DatabaseManager.isCacheEnabled(options);
+          if (isCacheEnabled && !DatabaseManager.cache)
+            DatabaseManager.enableCache();
+
           if (targetProvided) {
-            if (DatabaseManager.cache || (options && options.cache)) {
+            if (isCacheEnabled) {
               if (DatabaseManager.redis) {
                 const addedVal = await this.get(
                   key + "." + targetProvided,
@@ -847,12 +864,7 @@ export = {
               );
             }
           } else {
-            if (
-              (DatabaseManager.cache &&
-                tableOptions &&
-                tableOptions.cacheLargeData) ||
-              (options && options.cache)
-            ) {
+            if (isCacheEnabled && tableOptions && tableOptions.cacheLargeData) {
               if (DatabaseManager.redis) {
                 const addedVal = await this.get(key, options);
                 if (addedVal) {
@@ -899,7 +911,7 @@ export = {
       };
 
       /**
-       * @info Check if a key exists in the table
+       * @info Check if a key exists in the table (database) not cache
        * @param {string} key - The key to check if exists
        * @returns {boolean | null} The result of the operation or null if an error occured
        * @throws {TypeError} If no key was specified
@@ -1051,6 +1063,10 @@ export = {
             targetProvided = unparsedTarget.join(".");
           }
 
+          const isCacheEnabled = DatabaseManager.isCacheEnabled(options);
+          if (isCacheEnabled && !DatabaseManager.cache)
+            DatabaseManager.enableCache();
+
           await this.table
             .updateOne(
               { id: key },
@@ -1066,8 +1082,7 @@ export = {
               if (targetProvided) {
                 fetchedData = _.get(fetchedData, targetProvided);
 
-                if (options && options.cache) DatabaseManager.enableCache();
-                if (DatabaseManager.cache || (options && options.cache)) {
+                if (isCacheEnabled) {
                   if (!DatabaseManager.redis) {
                     DatabaseManager.cache.set(
                       this.table.name + "." + key + "." + targetProvided,
@@ -1083,10 +1098,9 @@ export = {
                 }
               } else {
                 if (
-                  (DatabaseManager.cache &&
-                    tableOptions &&
-                    tableOptions.cacheLargeData) ||
-                  (options && options.cache)
+                  isCacheEnabled &&
+                  tableOptions &&
+                  tableOptions.cacheLargeData
                 ) {
                   if (!DatabaseManager.redis) {
                     DatabaseManager.cache.set(
@@ -1149,6 +1163,10 @@ export = {
             targetProvided = unparsedTarget.join(".");
           }
 
+          const isCacheEnabled = DatabaseManager.isCacheEnabled(options);
+          if (isCacheEnabled && !DatabaseManager.cache)
+            DatabaseManager.enableCache();
+
           await this.table
             .updateOne(
               { id: key },
@@ -1164,8 +1182,9 @@ export = {
               if (targetProvided) {
                 fetchedData = _.get(fetchedData, targetProvided);
 
-                if (options && options.cache) DatabaseManager.enableCache();
-                if (DatabaseManager.cache || (options && options.cache)) {
+                if (options && options.cache && !DatabaseManager.cache)
+                  DatabaseManager.enableCache();
+                if (isCacheEnabled) {
                   if (!DatabaseManager.redis) {
                     DatabaseManager.cache.set(
                       this.table.name + "." + key + "." + targetProvided,
@@ -1181,10 +1200,9 @@ export = {
                 }
               } else {
                 if (
-                  (DatabaseManager.cache &&
-                    tableOptions &&
-                    tableOptions.cacheLargeData) ||
-                  (options && options.cache)
+                  isCacheEnabled &&
+                  tableOptions &&
+                  tableOptions.cacheLargeData
                 ) {
                   if (!DatabaseManager.redis) {
                     DatabaseManager.cache.set(

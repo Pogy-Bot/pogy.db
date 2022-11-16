@@ -2,7 +2,7 @@
 import mongoose from "mongoose";
 import { Options } from "../types";
 import { EventEmitter } from "events";
-import redis, { RedisClientType, RedisFunctions, RedisModules, RedisScripts } from "redis";
+import { RedisClientType, RedisFunctions, RedisModules, RedisScripts } from "redis";
 declare class DatabaseManager {
     mongoClient: mongoose.Connection | null;
     redisClient: RedisClientType<RedisModules, RedisFunctions, RedisScripts> | null;
@@ -10,20 +10,22 @@ declare class DatabaseManager {
     mongoCache: Map<string, any> | RedisClientType<RedisModules, RedisFunctions, RedisScripts> | null;
     static cache: Map<string, any> | RedisClientType<RedisModules, RedisFunctions, RedisScripts> | any;
     redisClientURL: string | null;
+    options: Options | null;
     static client: mongoose.Connection | null;
     static redis: RedisClientType<RedisModules, RedisFunctions, RedisScripts> | any;
     static tables: string[];
     static events: EventEmitter;
     static redisURL: string;
+    static options: Options;
     constructor();
     get client(): mongoose.Connection;
     set client(value: mongoose.Connection);
     get tables(): string[];
     set tables(value: string[]);
-    get cache(): Map<string, any> | redis.RedisClientType<redis.RedisModules, redis.RedisFunctions, redis.RedisScripts>;
-    set cache(value: Map<string, any> | redis.RedisClientType<redis.RedisModules, redis.RedisFunctions, redis.RedisScripts>);
-    get redis(): redis.RedisClientType<redis.RedisModules, redis.RedisFunctions, redis.RedisScripts>;
-    set redis(value: redis.RedisClientType<redis.RedisModules, redis.RedisFunctions, redis.RedisScripts>);
+    get cache(): RedisClientType<RedisModules, RedisFunctions, RedisScripts> | Map<string, any>;
+    set cache(value: RedisClientType<RedisModules, RedisFunctions, RedisScripts> | Map<string, any>);
+    get redis(): RedisClientType<RedisModules, RedisFunctions, RedisScripts>;
+    set redis(value: RedisClientType<RedisModules, RedisFunctions, RedisScripts>);
     get redisURL(): string;
     set redisURL(url: string);
     /**
@@ -32,5 +34,6 @@ declare class DatabaseManager {
      */
     static initMongo(url: string, options?: Options, databaseOptions?: mongoose.ConnectOptions): Promise<mongoose.Connection>;
     static enableCache(): Promise<boolean>;
+    static isCacheEnabled(options: any): boolean;
 }
 export default DatabaseManager;

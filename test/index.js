@@ -1,3 +1,5 @@
+const { DatabaseManager } = require("../lib/index");
+
 const db = require("../lib/index"),
   url = process.argv[2].replace("--", ""),
   redis = process?.argv[3]?.replace("--", "");
@@ -12,7 +14,7 @@ async function test() {
   const database = await db.connect(url, {
     cache: true,
     redis: {
-      url: redis ? redis : null,
+      redis: redis ? redis : undefined,
     },
   });
   if (database) {
