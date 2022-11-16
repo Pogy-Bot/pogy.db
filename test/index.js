@@ -16,6 +16,9 @@ async function test() {
     redis: {
       redis: redis ? redis : undefined,
     },
+    logs: {
+      hidden: false,
+    }
   });
   if (database) {
     console.log("Starting tests");

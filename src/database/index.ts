@@ -97,7 +97,7 @@ class DatabaseManager {
     try {
       if (options && options.redis && options.redis.url)
         this.redisURL = options.redis.url;
-      if (options && options.logFile) setLogFile(options.logFile);
+      if (options && options.logs && options.logs.file) setLogFile(options.logs.file);
       if (options && options.cache) this.enableCache();
       const mongo = mongoose;
 
@@ -109,7 +109,7 @@ class DatabaseManager {
             date: Date.now(),
           });
         }
-        if (!options || !options.hidelogs)
+        if (!options || (options.logs && options.logs.hidden !== true))
           logger.error(`Mongoose connection error: ${err.stack}`, {
             label: "Database",
           });
@@ -121,7 +121,7 @@ class DatabaseManager {
           reason: "DISCONNECTED - The database disconnected.",
           date: Date.now(),
         });
-        if (!options || !options.hidelogs)
+        if (!options || (options.logs && options.logs.hidden !== true))
           logger.error(`Mongoose connection lost`, { label: "Database" });
       });
 
@@ -131,7 +131,7 @@ class DatabaseManager {
           reason: "CONNECTED - The database connected.",
           date: Date.now(),
         });
-        if (!options || !options.hidelogs)
+        if (!options || (options.logs && options.logs.hidden !== true))
           logger.info(`Mongoose connection connected`, { label: "Database" });
       });
 
@@ -141,7 +141,7 @@ class DatabaseManager {
           reason: "RECONNECTED - The database reconnected.",
           date: Date.now(),
         });
-        if (!options || !options.hidelogs)
+        if (!options || (options.logs && options.logs.hidden !== true))
           logger.info(`Mongoose connection reconnected`, { label: "Database" });
       });
 
@@ -151,7 +151,7 @@ class DatabaseManager {
           reason: "RECONNECTFAILED - The database reconnect failed.",
           date: Date.now(),
         });
-        if (!options || !options.hidelogs)
+        if (!options || (options.logs && options.logs.hidden !== true))
           logger.info(
             `Mongoose connection failed to connect after the tries.`,
             {

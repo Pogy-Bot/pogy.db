@@ -1,14 +1,18 @@
 import { Collection } from "mongoose";
 export declare type Options = {
     cache?: boolean;
-    hidelogs?: boolean;
-    logFile?: string;
+    logs?: {
+        hidden?: boolean;
+        file?: string;
+    };
     redis?: {
         url: string;
     };
 };
 export declare type migrateOptions = {
-    hidelogs?: boolean;
+    logs?: {
+        hidden?: boolean;
+    };
 };
 export declare type migrationObject = {
     error: Error | boolean;

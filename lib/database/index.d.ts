@@ -22,8 +22,8 @@ declare class DatabaseManager {
     set client(value: mongoose.Connection);
     get tables(): string[];
     set tables(value: string[]);
-    get cache(): RedisClientType<RedisModules, RedisFunctions, RedisScripts> | Map<string, any>;
-    set cache(value: RedisClientType<RedisModules, RedisFunctions, RedisScripts> | Map<string, any>);
+    get cache(): Map<string, any> | RedisClientType<RedisModules, RedisFunctions, RedisScripts>;
+    set cache(value: Map<string, any> | RedisClientType<RedisModules, RedisFunctions, RedisScripts>);
     get redis(): RedisClientType<RedisModules, RedisFunctions, RedisScripts>;
     set redis(value: RedisClientType<RedisModules, RedisFunctions, RedisScripts>);
     get redisURL(): string;

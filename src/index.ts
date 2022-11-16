@@ -140,8 +140,10 @@ export = {
     newConnection: string,
     options: migrateOptions
   ): Promise<migrationObject> {
+    const isLogsHidden =
+      !options || (options.logs && options.logs.hidden !== true);
     if (!this.isOnline()) {
-      if (!options || !options.hidelogs)
+      if (isLogsHidden)
         logger.error(`Unable to migrate since the database was offline`, {
           label: "Migrations",
         });
@@ -154,7 +156,7 @@ export = {
     const currentTiming = Date.now();
     let step = 0;
     try {
-      if (!options || !options.hidelogs)
+      if (isLogsHidden)
         logger.info(`Preparing to migrate schema: "${schema}"`, {
           label: "Migrations",
         });
@@ -167,7 +169,7 @@ export = {
         documentForm: true,
       });
       step = 2;
-      if (!options || !options.hidelogs)
+      if (isLogsHidden)
         logger.info(`Fetched data in ${Date.now() - DateNow}ms`, {
           label: "Migrations",
         });
@@ -181,7 +183,7 @@ export = {
         const newTable = await newConnectionDatabase.createCollection(schema);
         await newTable.insertMany(data);
         step = 7.1;
-        if (!options || !options.hidelogs)
+        if (isLogsHidden)
           logger.info(`Created migration table`, {
             label: "Migrations",
           });
@@ -197,7 +199,7 @@ export = {
         await newTable.deleteMany({});
         await newTable.insertMany(data);
         step = 7.2;
-        if (!options || !options.hidelogs)
+        if (isLogsHidden)
           logger.info(`Updated migration table`, {
             label: "Migrations",
           });
@@ -207,7 +209,7 @@ export = {
       newConnectionDatabase.close();
 
       step = 9;
-      if (!options || !options.hidelogs)
+      if (isLogsHidden)
         logger.info(`Migration successful`, {
           label: "Migrations",
         });
@@ -221,7 +223,7 @@ export = {
         dataCreated: data.length,
       };
     } catch (err) {
-      if (!options || !options.hidelogs)
+      if (isLogsHidden)
         logger.error(`Migration Error: ${err.message} on step ${step}`, {
           label: "Migrations",
         });
