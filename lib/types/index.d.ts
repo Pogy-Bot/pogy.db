@@ -15,11 +15,15 @@ export declare type migrateOptions = {
     };
 };
 export declare type migrationObject = {
-    error: Error | boolean;
-    date?: number;
-    timeTaken?: number;
+    errors: Array<{
+        error: Error | boolean;
+        date: number;
+        step: number;
+    }>;
+    date: number;
+    timeTaken: number;
     table: string;
-    dataCreated?: number;
+    dataCreated: number;
 };
 export declare type TableAllOptions = {
     documentForm?: boolean;

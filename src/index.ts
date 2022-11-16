@@ -140,98 +140,125 @@ export = {
     newConnection: string,
     options: migrateOptions
   ): Promise<migrationObject> {
+    const errors = [];
+    const currentTiming = Date.now();
     const isLogsHidden =
       !options || (options.logs && options.logs.hidden !== true);
+
     if (!this.isOnline()) {
       if (isLogsHidden)
         logger.error(`Unable to migrate since the database was offline`, {
           label: "Migrations",
         });
+
       return {
         table: schema,
-        error: new Error("Unable to migrate since the database was offline"),
-      };
-    }
-
-    const currentTiming = Date.now();
-    let step = 0;
-    try {
-      if (isLogsHidden)
-        logger.info(`Preparing to migrate schema: "${schema}"`, {
-          label: "Migrations",
-        });
-
-      const DateNow = Date.now();
-      step = 1;
-      const data = await (
-        await new this.table(schema)
-      ).all({
-        documentForm: true,
-      });
-      step = 2;
-      if (isLogsHidden)
-        logger.info(`Fetched data in ${Date.now() - DateNow}ms`, {
-          label: "Migrations",
-        });
-      step = 3;
-      const newConnectionDatabase = await mongoose.createConnection(
-        newConnection
-      );
-      step = 4;
-      try {
-        step = 5;
-        const newTable = await newConnectionDatabase.createCollection(schema);
-        await newTable.insertMany(data);
-        step = 7.1;
-        if (isLogsHidden)
-          logger.info(`Created migration table`, {
-            label: "Migrations",
-          });
-      } catch (err) {
-        step = 6;
-        const newTable = await newConnectionDatabase.model(
-          schema,
-          new mongoose.Schema({
-            id: String,
-            data: Object,
-          })
-        );
-        await newTable.deleteMany({});
-        await newTable.insertMany(data);
-        step = 7.2;
-        if (isLogsHidden)
-          logger.info(`Updated migration table`, {
-            label: "Migrations",
-          });
-      }
-
-      step = 8;
-      newConnectionDatabase.close();
-
-      step = 9;
-      if (isLogsHidden)
-        logger.info(`Migration successful`, {
-          label: "Migrations",
-        });
-
-      const lastTiming = Date.now();
-      return {
-        error: false,
+        timeTaken: Date.now() - currentTiming,
+        dataCreated: 0,
         date: Date.now(),
-        timeTaken: lastTiming - currentTiming,
-        table: schema,
-        dataCreated: data.length,
-      };
-    } catch (err) {
-      if (isLogsHidden)
-        logger.error(`Migration Error: ${err.message} on step ${step}`, {
-          label: "Migrations",
-        });
-      return {
-        table: schema,
-        error: err,
+        errors: [
+          {
+            error: new TypeError("The database was offline."),
+            step: 1,
+            date: Date.now(),
+          },
+        ],
       };
     }
+
+    async function migrate() {
+      let step = 0;
+      try {
+        if (isLogsHidden)
+          logger.info(`Preparing to migrate schema: "${schema}"`, {
+            label: "Migrations",
+          });
+
+        const DateNow = Date.now();
+        step = 1;
+        const data = await (
+          await new this.table(schema)
+        ).all({
+          documentForm: true,
+        });
+        console.log((isLogsHidden as any).a.a.a.a);
+        step = 2;
+        if (isLogsHidden)
+          logger.info(`Fetched data in ${Date.now() - DateNow}ms`, {
+            label: "Migrations",
+          });
+        step = 3;
+        const newConnectionDatabase = await mongoose.createConnection(
+          newConnection
+        );
+        step = 4;
+        try {
+          step = 5;
+          const newTable = await newConnectionDatabase.createCollection(schema);
+          await newTable.insertMany(data);
+          step = 7.1;
+          if (isLogsHidden)
+            logger.info(`Created migration table`, {
+              label: "Migrations",
+            });
+        } catch (err) {
+          step = 6;
+          const newTable = await newConnectionDatabase.model(
+            schema,
+            new mongoose.Schema({
+              id: String,
+              data: Object,
+            })
+          );
+          await newTable.deleteMany({});
+          await newTable.insertMany(data);
+          step = 7.2;
+          if (isLogsHidden)
+            logger.info(`Updated migration table`, {
+              label: "Migrations",
+            });
+        }
+
+        step = 8;
+        newConnectionDatabase.close();
+
+        step = 9;
+        if (isLogsHidden)
+          logger.info(`Migration successful`, {
+            label: "Migrations",
+          });
+
+        const lastTiming = Date.now();
+        return {
+          errors: errors,
+          date: Date.now(),
+          timeTaken: lastTiming - currentTiming,
+          table: schema,
+          dataCreated: data.length,
+        };
+      } catch (err) {
+        if (isLogsHidden)
+          logger.error(`Migration Error: ${err.message} on step ${step}`, {
+            label: "Migrations",
+          });
+
+        errors.push({
+          error: err,
+          step: step,
+          date: Date.now(),
+        });
+
+        return {
+          errors: errors,
+          date: Date.now(),
+          timeTaken: Date.now() - currentTiming,
+          table: schema,
+          dataCreated: 0,
+        };
+      }
+    }
+
+    return await migrate();
   },
 
   /**

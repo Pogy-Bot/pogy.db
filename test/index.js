@@ -1,5 +1,3 @@
-const { DatabaseManager } = require("../lib/index");
-
 const db = require("../lib/index"),
   url = process.argv[2].replace("--", ""),
   redis = process?.argv[3]?.replace("--", "");
@@ -18,7 +16,7 @@ async function test() {
     },
     logs: {
       hidden: false,
-    }
+    },
   });
   if (database) {
     console.log("Starting tests");
