@@ -1,6 +1,10 @@
-import { Collection } from "mongoose";
+import { Model } from "mongoose";
+import { CollectionInterface } from "../database/collection";
 export declare type Options = {
-    cache?: boolean;
+    cache?: {
+        toggle?: boolean;
+        cacheOnly?: boolean;
+    };
     logs?: {
         hidden?: boolean;
         file?: string;
@@ -25,38 +29,91 @@ export declare type migrationObject = {
     table: string;
     dataCreated: number;
 };
-export declare type TableAllOptions = {
+export declare type TableAllOptions<T = unknown> = {
     documentForm?: boolean;
+    cache?: {
+        cacheOnly?: boolean;
+    };
+    limit?: number;
+    sort?: string;
+    filter?: (data: AllData<T>) => boolean;
 };
-export declare type CustomizedTable = {
-    table: Collection;
+export interface AllData<T = unknown> {
+    id: string;
+    data: T;
+}
+export declare type CustomizedTable<T = unknown> = {
+    table: Model<CollectionInterface<T>>;
     get: (key: string, options?: {
-        cache: boolean;
-    }) => Promise<null | string | object | number | any>;
-    set: (key: string, value: string | object | number, options?: {
-        cache?: boolean;
+        cache?: {
+            toggle?: boolean;
+            cacheOnly?: boolean;
+        };
+    }) => Promise<null | string | number | T>;
+    set: (key: string, value: string | number | boolean | T, options?: {
+        cache?: {
+            toggle: boolean;
+            cacheOnly?: boolean;
+        };
         returnData?: boolean;
-    }) => Promise<null | boolean | any>;
-    add: (key: string, value: string | object | number, options?: {
-        cache?: boolean;
+        database?: {
+            ttl?: number;
+        };
+    }) => Promise<null | boolean | T>;
+    add: (key: string, value: number | string, options?: {
+        cache?: {
+            toggle: boolean;
+            cacheOnly?: boolean;
+        };
         returnData?: boolean;
-    }) => Promise<null | boolean | any>;
-    subtract: (key: string, value: string | object | number, options?: {
-        cache?: boolean;
+    }) => Promise<null | boolean | T>;
+    subtract: (key: string, value: number | string, options?: {
+        cache?: {
+            toggle: boolean;
+            cacheOnly?: boolean;
+        };
         returnData?: boolean;
-    }) => Promise<null | boolean | any>;
-    has: (key: string) => Promise<boolean | null>;
-    delete: (key: string) => Promise<boolean | null>;
-    push: (key: string, value: string | object | number, options?: {
-        cache?: boolean;
+    }) => Promise<null | boolean | T>;
+    has: (key: string, options: {
+        cache?: {
+            cacheOnly?: boolean;
+        };
+    }) => Promise<boolean | null>;
+    delete: (key: string, options: {
+        cache?: {
+            cacheOnly?: boolean;
+        };
+    }) => Promise<boolean | null>;
+    push: (key: string, value: string | number | boolean | T, options?: {
+        cache?: {
+            toggle: boolean;
+        };
         returnData?: boolean;
-    }) => Promise<null | boolean | any>;
-    pull: (key: string, value: string | object | number, options?: {
-        cache?: boolean;
-        returnData?: boolean;
-    }) => Promise<null | boolean | any>;
-    all: (options?: TableAllOptions) => Promise<object | any>;
-    drop: () => Promise<boolean>;
+    }) => Promise<null | boolean | T>;
+    pull: (key: string, value: string | number | boolean | T, options: {
+        cache?: {
+            toggle: boolean;
+        };
+        returnData: true;
+    }) => Promise<null | boolean | T>;
+    shift: (key: string, options: {
+        cache?: {
+            toggle: boolean;
+        };
+        returnData: true;
+    }) => Promise<null | boolean | unknown>;
+    unshift: (key: string, value: string | number | boolean | unknown, options: {
+        cache?: {
+            toggle: boolean;
+        };
+        returnData: true;
+    }) => Promise<null | boolean | unknown>;
+    all: (options?: TableAllOptions) => Promise<T>;
+    drop: () => Promise<boolean | null>;
+};
+export declare type pingOptions = {
+    tableName: string;
+    dataToGet: string;
 };
 export declare type PingResult = {
     cached: boolean;

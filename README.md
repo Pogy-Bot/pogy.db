@@ -5,13 +5,13 @@
 
 Pogy.db is a mongoose **(v.6.5.2)** based database which is used in Pogy. Our database makes it easy for migrations, complicated queries, supports in map caching, logging to know what is happening within the database and more.
 
-- Endured storage, your data doesn't disappear on restarts.
-- Migrations, to backup your data every once in a while.
-- Caching using Maps or Redis, to speed up your queries.
-- Logging, get a log of when the database gets online, or offline.
-- Ping, check the execution time of your queries.
-- Fully customizable, you can customize your database options as you want.
-- Built in support for Redis, that means you move from Maps to Redis as your application grows.
+-   Endured storage, your data doesn't disappear on restarts.
+-   Migrations, to backup your data every once in a while.
+-   Caching using Maps or Redis, to speed up your queries.
+-   Logging, get a log of when the database gets online, or offline.
+-   Ping, check the execution time of your queries.
+-   Fully customizable, you can customize your database options as you want.
+-   Built in support for Redis, that means you move from Maps to Redis as your application grows.
 
 ## Download
 
@@ -192,19 +192,19 @@ node test --mongoURL --redisURL
 
 but replace "mongoURL" with the url of your database and "redisURL" (OPTIONAL) with the url of your redis server.
 
-- example: `npm test --mongodb://localhost:27017/test --redis://localhost:6379`
-- - No Redis: `npm test --mongodb://localhost:27017/test`
+-   example: `npm test --mongodb://localhost:27017/test --redis://localhost:6379`
+-   -   No Redis: `npm test --mongodb://localhost:27017/test`
 
 ## Documentation
 
 All functions in this package return a promise. So `await` is needed to get the result.
 
-- database.connect() **(async Function)** - [Click here to go](#connect)
-- database.table() **(async Function)** - [Click here to go](#table)
-- database.migrate() **(async Function)** - [Click here to go](#migrate)
-- database.ping() **(async Function)** - [Click here to go](#ping)
-- database.isOnline() **(Function)** - [Click here to go](#isonline)
-- database.DatabaseManager **(Class)** [Click here to go](#databasemanager)
+-   database.connect() **(async Function)** - [Click here to go](#connect)
+-   database.table() **(async Function)** - [Click here to go](#table)
+-   database.migrate() **(async Function)** - [Click here to go](#migrate)
+-   database.ping() **(async Function)** - [Click here to go](#ping)
+-   database.isOnline() **(Function)** - [Click here to go](#isonline)
+-   database.DatabaseManager **(Class)** [Click here to go](#databasemanager)
 
 ## Connect
 
@@ -219,30 +219,30 @@ All functions in this package return a promise. So `await` is needed to get the 
 
 // available options
 options = {
-  cache: true, // Whether or not to cache the data.
-  hidelogs: false, // Whether or not to hide the logs.
-  logFile: "./logs/database.log", // The file to log to.
-  redis: {
-    url: "redis://localhost:6379", // The url to the redis server.
-  },
+    cache: true, // Whether or not to cache the data.
+    hidelogs: false, // Whether or not to hide the logs.
+    logFile: "./logs/database.log", // The file to log to.
+    redis: {
+        url: "redis://localhost:6379" // The url to the redis server.
+    }
 };
 
 //if you don't want to log anything
 options = {
-  cache: true,
-  redis: false, // redis is disabled, so cache will be using Maps
+    cache: true,
+    redis: false // redis is disabled, so cache will be using Maps
 };
 
 // default mongooseOptions
 mongooseOptions = {
-  keepAlive: true, // Whether or not to keep the connection alive.
-  minPoolSize: 3, // The minimum pool size.
-  maxPoolSize: 10, // The maximum pool size.
-  serverSelectionTimeoutMS: 10000, // The server selection timeout.
-  socketTimeoutMS: 60000, // The socket timeout.
+    keepAlive: true, // Whether or not to keep the connection alive.
+    minPoolSize: 3, // The minimum pool size.
+    maxPoolSize: 10, // The maximum pool size.
+    serverSelectionTimeoutMS: 10000, // The server selection timeout.
+    socketTimeoutMS: 60000 // The socket timeout.
 
-  // all options are available on mongoose v6.5.2's documentation
-  // https://mongoosejs.com/docs/connections.html#connection-string-options
+    // all options are available on mongoose v6.5.2's documentation
+    // https://mongoosejs.com/docs/connections.html#connection-string-options
 };
 ```
 
@@ -253,23 +253,23 @@ const database = require("pogy.db");
 //or
 import database from "pogy.db";
 await database.connect(
-  "mongodb://localhost:27017/test",
-  {
-    cache: true, // cache the data
-    hidelogs: false, // don't hide the logs
-    logFile: "./logs/database.log", // log to the database events in logs/database.log
-    redis: {
-      url: "redis://localhost:6379", // The url to the redis server.
+    "mongodb://localhost:27017/test",
+    {
+        cache: true, // cache the data
+        hidelogs: false, // don't hide the logs
+        logFile: "./logs/database.log", // log to the database events in logs/database.log
+        redis: {
+            url: "redis://localhost:6379" // The url to the redis server.
+        }
     },
-  },
-  {
-    // mongoose options
-    keepAlive: true,
-    minPoolSize: 3,
-    maxPoolSize: 10,
-    serverSelectionTimeoutMS: 10000,
-    socketTimeoutMS: 60000,
-  }
+    {
+        // mongoose options
+        keepAlive: true,
+        minPoolSize: 3,
+        maxPoolSize: 10,
+        serverSelectionTimeoutMS: 10000,
+        socketTimeoutMS: 60000
+    }
 );
 ```
 
@@ -286,33 +286,33 @@ This function is used to create a table in the database or fetch an existing tab
   @returns {object | boolean} - The table or false if the database is not connected.
 */
 const users = await new database.table("users", {
-  catchErrors: true, // logs errors if there's an error in the function
+    catchErrors: true // logs errors if there's an error in the function
 });
 
 // if the schema is available and the database is connected
 if (users) {
-  /*
+    /*
     set(key, value)
     @param {string} key - The key to set.
     @param {object | string | number} value - The value to set.
     @returns {null | boolean | any} The result of the operation or the data if returnData is true
   */
-  await users.set(message.author.id, {
-    username: message.author.username,
-    discriminator: message.author.discriminator,
-    id: message.author.id,
-    avatar: message.author.avatarURL,
-    badges: [],
-    message_count: 0,
-  });
+    await users.set(message.author.id, {
+        username: message.author.username,
+        discriminator: message.author.discriminator,
+        id: message.author.id,
+        avatar: message.author.avatarURL,
+        badges: [],
+        message_count: 0
+    });
 
-  /*
+    /*
     get(key)
     @param {string} key - The key to get.
     @returns {object | string | undefined | any} - The value of the key.
   */
-  const username = await users.get(`${message.author.id}.username`);
-  console.log(username); // -> "Peter_#4444"
+    const username = await users.get(`${message.author.id}.username`);
+    console.log(username); // -> "Peter_#4444"
 }
 ```
 
@@ -440,7 +440,7 @@ This function is used to push an element to an array in the database or create a
   @returns {null | boolean | any} The result of the operation or the data if returnData is true
 */
 await users.push(`${message.author.id}.badges`, "bot_owner", {
-  returnData: false,
+    returnData: false
 }); // -> true
 // array becomes ['verified', 'bot_owner'] if returnData: true
 ```
@@ -464,20 +464,20 @@ You can use `<your-table>.table.<function>` to call the function.
 
 Examples:
 
-- `users.table.find({})`
-- `guilds.table.findOne({})`
+-   `users.table.find({})`
+-   `guilds.table.findOne({})`
 
 or
 
 ```js
 const users = await new database.table("users", {
-  catchErrors: true, // logs errors if there's an error in the function
+    catchErrors: true // logs errors if there's an error in the function
 });
 
 // if the database is online
 if (users) {
-  const customTable = await users.table.findOne({});
-  console.log(customTable);
+    const customTable = await users.table.findOne({});
+    console.log(customTable);
 }
 ```
 
@@ -486,13 +486,13 @@ or
 ```js
 // node js v14+
 const customMongoDB = (
-  await new database.table("users", [
-    (catchErrors: true), // logs errors if there's an error in the function
-  ])
+    await new database.table("users", [
+        (catchErrors: true) // logs errors if there's an error in the function
+    ])
 )?.table;
 
 const user = await users.findOne({
-  id: "710465231779790849",
+    id: "710465231779790849"
 });
 
 console.log(user);
@@ -506,21 +506,21 @@ This function is used to migrate the table to a new database connection.
 
 ```js
 const users = await new database.table("users", {
-  catchErrors: true, // logs errors if there's an error in the function
+    catchErrors: true // logs errors if there's an error in the function
 });
 
 // if the database is online
 if (users) {
-  /*
+    /*
     migrate(schema, newConnection)
     @param {string} schema - The schema name to migrate
     @param {object} newConnection - The new database connection.
     @param {object} options - The migration options. (hideLogs - Whether or not to hide the logs) (model - The model to use default [id: String, data: Object])
     @returns {object} - the migration status
   */
-  await database.migrate("users", "mongodb://localhost:27017/test2", {
-    hideLogs: false,
-  });
+    await database.migrate("users", "mongodb://localhost:27017/test2", {
+        hideLogs: false
+    });
 }
 ```
 
@@ -547,13 +547,13 @@ if the table is found it will return:
 
 ```json
 {
-  "cached": true, //if the data is cached
-  "tableName": "users", // the table name provided
-  "dataToGet": "710465231779790849", // the data requested
-  "timeToGetTable": 0.03450000286102295, // the time taken to get the table in ms
-  "timeToGetData": 0.011600017547607422, // the time taken to get the data in ms
-  "redisPing": 1.380900003015995, // the time taken to ping redis, if redis is enabled
-  "totalPing": 0.04610002040863037 // the total ping (table and data) in ms
+    "cached": true, //if the data is cached
+    "tableName": "users", // the table name provided
+    "dataToGet": "710465231779790849", // the data requested
+    "timeToGetTable": 0.03450000286102295, // the time taken to get the table in ms
+    "timeToGetData": 0.011600017547607422, // the time taken to get the data in ms
+    "redisPing": 1.380900003015995, // the time taken to ping redis, if redis is enabled
+    "totalPing": 0.04610002040863037 // the total ping (table and data) in ms
 }
 ```
 
@@ -693,42 +693,37 @@ const mongoose = require("mongoose");
 import database from "pogy.db";
 
 async function connect() {
-  await database.connect(
-    "mongodb://localhost:27017/test",
-    {
-      cache: true,
-      hidelogs: false,
-      logFile: "./logs/database.log",
-    },
-    {
-      keepAlive: true,
-      minPoolSize: 3,
-      maxPoolSize: 10,
-      serverSelectionTimeoutMS: 10000,
-      socketTimeoutMS: 60000,
-    }
-  );
-
-  client.database = database.DatabaseManager.client;
-
-  // every 24 hours
-  cron
-    .schedule("0 0 * * *", async () => {
-      // migrate a certain table
-      const migration1 = await database.migrate(
-        "users",
-        "mongodb://localhost:27017/test2",
+    await database.connect(
+        "mongodb://localhost:27017/test",
         {
-          hideLogs: false, // add migration logs to your main logFile
-          model: new mongoose.Schema({
-            id: String,
-            data: Object,
-          }), // the model of the table, this is the default one but you can change it if you wanna customize your table.
+            cache: true,
+            hidelogs: false,
+            logFile: "./logs/database.log"
+        },
+        {
+            keepAlive: true,
+            minPoolSize: 3,
+            maxPoolSize: 10,
+            serverSelectionTimeoutMS: 10000,
+            socketTimeoutMS: 60000
         }
-      );
+    );
 
-      console.log(migration1);
-      /*
+    client.database = database.DatabaseManager.client;
+
+    // every 24 hours
+    cron.schedule("0 0 * * *", async () => {
+        // migrate a certain table
+        const migration1 = await database.migrate("users", "mongodb://localhost:27017/test2", {
+            hideLogs: false, // add migration logs to your main logFile
+            model: new mongoose.Schema({
+                id: String,
+                data: Object
+            }) // the model of the table, this is the default one but you can change it if you wanna customize your table.
+        });
+
+        console.log(migration1);
+        /*
        returns if there is no error:
        {
         error: false,
@@ -745,23 +740,19 @@ async function connect() {
        }
      */
 
-      // or automatically migrate all tables
-      database.DatabaseManager.tables.forEach(async (table) => {
-        const migrationData = await database.migrate(
-          table,
-          "mongodb://localhost:27017/test2",
-          {
-            hideLogs: false, // add migration logs to your main logFile,
-            model: new mongoose.Schema({
-              id: String,
-              data: Object,
-            }), // the model of the table, this is the default one but you can change it if you wanna customize your table.
-          }
-        );
+        // or automatically migrate all tables
+        database.DatabaseManager.tables.forEach(async (table) => {
+            const migrationData = await database.migrate(table, "mongodb://localhost:27017/test2", {
+                hideLogs: false, // add migration logs to your main logFile,
+                model: new mongoose.Schema({
+                    id: String,
+                    data: Object
+                }) // the model of the table, this is the default one but you can change it if you wanna customize your table.
+            });
 
-        console.log(migrationData);
+            console.log(migrationData);
 
-        /*
+            /*
           returns if there is no error:
           {
            error: false,
@@ -777,9 +768,8 @@ async function connect() {
            error: the error
           }
         */
-      });
-    })
-    .start();
+        });
+    }).start();
 }
 
 connect();
@@ -797,65 +787,53 @@ const database = require("pogy.db");
 import database from "pogy.db";
 
 async function connect() {
-  await database.connect(
-    "mongodb://localhost:27017/test",
-    {
-      cache: true,
-      hidelogs: false,
-      logFile: "./logs/database.log",
-    },
-    {
-      keepAlive: true,
-      minPoolSize: 3,
-      maxPoolSize: 10,
-      serverSelectionTimeoutMS: 10000,
-      socketTimeoutMS: 60000,
-    }
-  );
-
-  client.database = database.DatabaseManager.client;
-
-  // create a migration on ready
-  client.on("ready", async () => {
-    client.database.tables
-      .forEach(async (table) => {
-        const migrationData = await database.migrate(
-          table,
-          "mongodb://localhost:27017/test2",
-          {
-            hideLogs: false, // add migration logs to your main logFile,
-            model: {
-              id: String,
-              data: Object,
-            }, // the model of the table, this is the default one but you can change it if you wanna customize your table.
-          }
-        );
-
-        if (migrationData.error) {
-          //send to migration error webhook
-          const webhook = new DiscordClient.WebhookClient({
-            url: "Webhook URL",
-          });
-          webhook.send(
-            `Migration of ${migrationData.table} encountered an error!\nError: ${migrationData.error.message}`
-          );
-        } else {
-          const webhook = new DiscordClient.WebhookClient({
-            url: "Webhook URL",
-          });
-          webhook.send(
-            `Migration of ${migrationData.table} completed!\nData Created: ${
-              migrationData.dataCreated
-            }\nDate: ${new Date(migrationData.date)}\nTime Taken: ${
-              migrationData.timeTaken
-            }ms`
-          );
+    await database.connect(
+        "mongodb://localhost:27017/test",
+        {
+            cache: true,
+            hidelogs: false,
+            logFile: "./logs/database.log"
+        },
+        {
+            keepAlive: true,
+            minPoolSize: 3,
+            maxPoolSize: 10,
+            serverSelectionTimeoutMS: 10000,
+            socketTimeoutMS: 60000
         }
-      })
-      .catch(console.error);
-  });
+    );
 
-  client.login("token");
+    client.database = database.DatabaseManager.client;
+
+    // create a migration on ready
+    client.on("ready", async () => {
+        client.database.tables
+            .forEach(async (table) => {
+                const migrationData = await database.migrate(table, "mongodb://localhost:27017/test2", {
+                    hideLogs: false, // add migration logs to your main logFile,
+                    model: {
+                        id: String,
+                        data: Object
+                    } // the model of the table, this is the default one but you can change it if you wanna customize your table.
+                });
+
+                if (migrationData.error) {
+                    //send to migration error webhook
+                    const webhook = new DiscordClient.WebhookClient({
+                        url: "Webhook URL"
+                    });
+                    webhook.send(`Migration of ${migrationData.table} encountered an error!\nError: ${migrationData.error.message}`);
+                } else {
+                    const webhook = new DiscordClient.WebhookClient({
+                        url: "Webhook URL"
+                    });
+                    webhook.send(`Migration of ${migrationData.table} completed!\nData Created: ${migrationData.dataCreated}\nDate: ${new Date(migrationData.date)}\nTime Taken: ${migrationData.timeTaken}ms`);
+                }
+            })
+            .catch(console.error);
+    });
+
+    client.login("token");
 }
 
 connect();

@@ -1,40 +1,42 @@
 {
-  "name": "pogy.db",
-  "version": "1.4.0",
-  "description": "A database wrapper for Pogy the discord bot.",
-  "main": "./lib/index.js",
-  "dependencies": {
-    "chalk": "^4.1.0",
-    "events": "^3.3.0",
-    "lodash": "^4.17.21",
-    "mongoose": "^6.5.3",
-    "redis": "^4.3.1",
-    "winston": "^3.8.1"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/Pogy-Bot/pogy.db.git"
-  },
-  "keywords": [
-    "database",
-    "pogy.db",
-    "pogy-database",
-    "mongoose"
-  ],
-  "author": "pogy-bot",
-  "license": "Apache 2.0",
-  "bugs": {
-    "url": "https://github.com/Pogy-Bot/pogy.db/issues"
-  },
-  "homepage": "https://github.com/Pogy-Bot/pogy.db#readme",
-  "directories": {
-    "test": "test"
-  },
-  "scripts": {
-    "build": "npx tsc",
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "devDependencies": {
-    "typescript": "^4.7.4"
-  }
+    "name": "pogy.db",
+    "version": "1.4.0",
+    "description": "A database wrapper for Pogy the discord bot.",
+    "main": "./lib/index.js",
+    "dependencies": {
+        "chalk": "^4.1.0",
+        "events": "^3.3.0",
+        "lodash": "^4.17.21",
+        "mongoose": "^6.5.3",
+        "redis": "^4.3.1",
+        "winston": "^3.8.1"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/Pogy-Bot/pogy.db.git"
+    },
+    "keywords": [
+        "database",
+        "pogy.db",
+        "pogy-database",
+        "mongoose"
+    ],
+    "author": "pogy-bot",
+    "license": "Apache 2.0",
+    "bugs": {
+        "url": "https://github.com/Pogy-Bot/pogy.db/issues"
+    },
+    "homepage": "https://github.com/Pogy-Bot/pogy.db#readme",
+    "directories": {
+        "test": "test"
+    },
+    "scripts": {
+        "build": "npx tsc",
+        "format": "npx prettier --write ."
+    },
+    "devDependencies": {
+        "@typescript-eslint/eslint-plugin": "^4.30.0",
+        "@typescript-eslint/parser": "^4.30.0",
+        "typescript": "^4.7.4"
+    }
 }
