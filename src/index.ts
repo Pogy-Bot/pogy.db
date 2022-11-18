@@ -254,7 +254,7 @@ export = {
 
             this.table = modelSchema(DatabaseManager.client, tableName);
 
-            await CacheService.init(this.table);
+            CacheService.init(this.table);
 
             /**
              * @info Get the value of a key from the table
@@ -274,7 +274,7 @@ export = {
             ): Promise<null | string | number | unknown> {
                 try {
                     if (!key) throw new TypeError("No key specified. Need Help ? Visit pogy.xyz/support");
-                    if (options?.cache?.cacheOnly && !options?.cache?.toggle) {
+                    if ((options?.cache?.cacheOnly || DatabaseManager?.options?.cache?.cacheOnly) && !(options?.cache?.toggle || DatabaseManager?.options?.cache?.toggle)) {
                         throw new TypeError("Make sure to enable the cache for this function before using cacheOnly. Need Help ? Visit pogy.xyz/support");
                     }
 
@@ -296,7 +296,7 @@ export = {
                         }
                     }
 
-                    if (!fetchedData && !options?.cache?.cacheOnly) return null;
+                    if (!fetchedData && (options?.cache?.cacheOnly || DatabaseManager?.options?.cache?.cacheOnly)) return null;
 
                     if (!fetchedData) {
                         let targetProvided: string;
@@ -402,13 +402,16 @@ export = {
                     database?: {
                         ttl?: number;
                     };
+                    redis?: {
+                        ttl?: number;
+                    };
                 }
             ): Promise<null | boolean | unknown> {
                 try {
                     if (!key) throw new TypeError("No key specified. Need Help ? Visit pogy.xyz/support");
                     if (!value) value = null;
 
-                    if (options?.cache?.cacheOnly && !options?.cache?.toggle) {
+                    if ((options?.cache?.cacheOnly || DatabaseManager?.options?.cache?.cacheOnly) && !(options?.cache?.toggle || DatabaseManager?.options?.cache?.toggle)) {
                         throw new TypeError("Make sure to enable the cache for this function before using cacheOnly. Need Help ? Visit pogy.xyz/support");
                     }
 
@@ -426,6 +429,8 @@ export = {
                     if (targetProvided) {
                         if (isCacheEnabled) {
                             if (DatabaseManager.redis) {
+                                const redisTTL = options?.redis?.ttl ?? -1;
+
                                 if (typeof value === "object" && value) {
                                     try {
                                         await DatabaseManager.redis.json.set(this.table.collection.name + "." + key + "." + targetProvided, "$", value);
@@ -436,12 +441,14 @@ export = {
                                 } else {
                                     await DatabaseManager.redis.set(this.table.collection.name + "." + key + "." + targetProvided, typeof value + ":" + value);
                                 }
+
+                                if (redisTTL !== -1) await DatabaseManager.redis.expire(this.table.collection.name + "." + key + "." + targetProvided, redisTTL);
                             } else {
                                 DatabaseManager.cache.set(this.table.collection.name + "." + key + "." + targetProvided, value);
                             }
                         }
 
-                        if (!options?.cache?.cacheOnly) {
+                        if (!(options?.cache?.cacheOnly || DatabaseManager?.options?.cache?.cacheOnly)) {
                             await this.table.updateOne(
                                 { id: key },
                                 {
@@ -460,6 +467,8 @@ export = {
                     } else {
                         if (isCacheEnabled && tableOptions && tableOptions.cacheLargeData) {
                             if (DatabaseManager.redis) {
+                                const redisTTL = (options?.redis?.ttl) ?? -1;
+
                                 if (typeof value === "object" && value) {
                                     try {
                                         await DatabaseManager.redis.json.set(this.table.collection.name + "." + key, "$", value);
@@ -470,10 +479,12 @@ export = {
                                 } else {
                                     await DatabaseManager.redis.set(this.table.collection.name + "." + key, typeof value + ":" + value);
                                 }
+
+                                if (redisTTL !== -1) await DatabaseManager.redis.expire(this.table.collection.name + "." + key + "." + targetProvided, redisTTL);
                             } else DatabaseManager.cache.set(this.table.collection.name + "." + key, value);
                         }
 
-                        if (!options?.cache?.cacheOnly) {
+                        if (!(options?.cache?.cacheOnly || DatabaseManager?.options?.cache?.cacheOnly)) {
                             await this.table.updateOne(
                                 { id: key },
                                 {
@@ -554,7 +565,7 @@ export = {
                     const isCacheEnabled = DatabaseManager.isCacheEnabled(options);
                     if (isCacheEnabled && !DatabaseManager.cache) DatabaseManager.enableCache();
 
-                    if (options?.cache?.cacheOnly && !options?.cache?.toggle) {
+                    if ((options?.cache?.cacheOnly || DatabaseManager?.options?.cache?.cacheOnly) && !(options?.cache?.toggle || DatabaseManager?.options?.cache?.toggle)) {
                         throw new TypeError("Make sure to enable the cache for this function before using cacheOnly. Need Help ? Visit pogy.xyz/support");
                     }
 
@@ -568,7 +579,7 @@ export = {
                                     await DatabaseManager.redis.set(this.table.collection.name + "." + key + "." + targetProvided, "number:" + value);
                                 }
 
-                                if (!options?.cache?.cacheOnly) {
+                                if (!(options?.cache?.cacheOnly || DatabaseManager?.options?.cache?.cacheOnly)) {
                                     await this.table.updateOne(
                                         { id: key },
                                         {
@@ -583,7 +594,7 @@ export = {
                                 if (DatabaseManager.cache.get(this.table.collection.name + "." + key + "." + targetProvided)) {
                                     DatabaseManager.cache.set(this.table.collection.name + "." + key + "." + targetProvided, DatabaseManager.cache.get(this.table.collection.name + "." + key + "." + targetProvided) + value);
 
-                                    if (!options?.cache?.cacheOnly) {
+                                    if (!(options?.cache?.cacheOnly || DatabaseManager?.options?.cache?.cacheOnly)) {
                                         await this.table.updateOne(
                                             { id: key },
                                             {
@@ -613,7 +624,7 @@ export = {
                                 }
                             }
                         } else {
-                            if (!options?.cache?.cacheOnly) {
+                            if (!(options?.cache?.cacheOnly || DatabaseManager?.options?.cache?.cacheOnly)) {
                                 await this.table.updateOne(
                                     { id: key },
                                     {
@@ -639,7 +650,7 @@ export = {
                             }
                         }
 
-                        if (!options?.cache?.cacheOnly) {
+                        if (!(options?.cache?.cacheOnly || DatabaseManager?.options?.cache?.cacheOnly)) {
                             await this.table.updateOne(
                                 { id: key },
                                 {
@@ -688,7 +699,7 @@ export = {
                     if (!key) throw new TypeError("No key specified. Need Help ? Visit pogy.xyz/support");
                     if (isNaN(Number(value))) throw new TypeError("Must specify value to subtract. Need Help ? Visit pogy.xyz/support");
 
-                    if (options?.cache?.cacheOnly && !options?.cache?.toggle) {
+                    if ((options?.cache?.cacheOnly || DatabaseManager?.options?.cache?.cacheOnly) && !(options?.cache?.toggle || DatabaseManager?.options?.cache?.toggle)) {
                         throw new TypeError("Make sure to enable the cache for this function before using cacheOnly. Need Help ? Visit pogy.xyz/support");
                     }
 
@@ -717,7 +728,7 @@ export = {
                                     await DatabaseManager.redis.set(this.table.collection.name + "." + key + "." + targetProvided, "number:" + value);
                                 }
 
-                                if (!options?.cache?.cacheOnly) {
+                                if (!(options?.cache?.cacheOnly || DatabaseManager?.options?.cache?.cacheOnly)) {
                                     await this.table.updateOne(
                                         { id: key },
                                         {
@@ -732,7 +743,7 @@ export = {
                                 if (DatabaseManager.cache.get(this.table.collection.name + "." + key + "." + targetProvided)) {
                                     DatabaseManager.cache.set(this.table.collection.name + "." + key + "." + targetProvided, DatabaseManager.cache.get(this.table.collection.name + "." + key + "." + targetProvided) + value);
 
-                                    if (!options?.cache?.cacheOnly) {
+                                    if (!(options?.cache?.cacheOnly || DatabaseManager?.options?.cache?.cacheOnly)) {
                                         await this.table.updateOne(
                                             { id: key },
                                             {
@@ -743,7 +754,7 @@ export = {
                                             { upsert: true }
                                         );
                                     }
-                                } else if (!options?.cache?.cacheOnly) {
+                                } else if (!(options?.cache?.cacheOnly || DatabaseManager?.options?.cache?.cacheOnly)) {
                                     const dataFetched = await this.table.findOneAndUpdate(
                                         { id: key },
                                         {
@@ -761,7 +772,7 @@ export = {
                                     }
                                 }
                             }
-                        } else if (!options?.cache?.cacheOnly) {
+                        } else if (!(options?.cache?.cacheOnly || DatabaseManager?.options?.cache?.cacheOnly)) {
                             await this.table.updateOne(
                                 { id: key },
                                 {
@@ -786,7 +797,7 @@ export = {
                             }
                         }
 
-                        if (!options?.cache?.cacheOnly) {
+                        if (!(options?.cache?.cacheOnly || DatabaseManager?.options?.cache?.cacheOnly)) {
                             await this.table.updateOne(
                                 { id: key },
                                 {
@@ -834,7 +845,7 @@ export = {
                         key = unparsedTarget.shift();
                         targetProvided = unparsedTarget.join(".");
                     }
-                    if (options?.cache?.cacheOnly) {
+                    if (options?.cache?.cacheOnly || DatabaseManager?.options?.cache?.cacheOnly) {
                         if (DatabaseManager.redis) {
                             try {
                                 const data = await DatabaseManager.redis.json.get(this.table.collection.name + "." + key + "." + targetProvided);
@@ -893,7 +904,7 @@ export = {
                         targetProvided = unparsedTarget.join(".");
                     }
 
-                    if (!options?.cache?.cacheOnly) {
+                    if (!(options?.cache?.cacheOnly || DatabaseManager?.options?.cache?.cacheOnly)) {
                         let fetchedData = await this.table.findOne({ id: key });
                         if (!fetchedData) {
                             return null;
@@ -1271,7 +1282,7 @@ export = {
                         });
 
                     if (options && options.returnData) {
-                        return await this.get(initialKey, options);
+                        return await this.get(initialKey);
                     } else return true;
                 } catch (err) {
                     if (tableOptions && tableOptions.catchErrors) {
@@ -1291,15 +1302,15 @@ export = {
              **/
             this.all = async function (options?: TableAllOptions): Promise<unknown> {
                 try {
-                    if (!options?.cache?.cacheOnly) {
-                        const AllStoredData = await this.table
-                            .find({
+                    if (!(options?.cache?.cacheOnly || DatabaseManager?.options?.cache?.cacheOnly)) {
+                        const AllStoredData = await (
+                            await this.table.collection.find({
                                 $where: function () {
                                     const expiredCheck = !(this.expireAt && this.expireAt.getTime() - Date.now() <= 0);
                                     return expiredCheck;
                                 }
                             })
-                            .toArray();
+                        ).toArray();
 
                         if (options && options.documentForm) {
                             return AllStoredData;
@@ -1400,7 +1411,6 @@ export = {
                 const stats = await this.table.collection.stats();
                 return stats;
             };
-
             return this;
         })();
     } as any as {

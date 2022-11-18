@@ -23,7 +23,7 @@ class CacheService {
         });
     }
 
-    public static async init(table: Model<CollectionInterface<unknown>>) {
+    public static init(table: Model<CollectionInterface<unknown>>) {
         table
             .watch([
                 {

@@ -1,18 +1,21 @@
-/* eslint-disable @typescript-eslint/no-var-requires */
 /* eslint-disable no-console */
+/* eslint-disable @typescript-eslint/no-var-requires */
 const db = require("../lib/index"),
     url = process.argv[2].replace("--", ""),
     redis = process?.argv[3]?.replace("--", "");
 
 async function test() {
     if (!url) {
-        throw new Error("A URL is required, for example node test/index.js --mongodb+srv://user:pass@cluster.domain.mongodb.net/database --redis://localhost:6379 (redis is optional). Need Help ? Visit pogy.xyz/support");
+        throw new Error("A URL is required, for example node test/index.js --mongodb://localhost:27017 --redis://localhost:6379 (redis is optional). Need Help ? Visit pogy.xyz/support");
     }
 
     const database = await db.connect(url, {
-        cache: true,
+        cache: {
+            cacheOnly: false,
+            toggle: true
+        },
         redis: {
-            redis: redis ? redis : undefined
+            url: redis ? redis : undefined
         },
         logs: {
             hidden: false
@@ -20,7 +23,7 @@ async function test() {
     });
     if (database) {
         console.log("Starting tests");
-        let schema = await new db.table("npm-test", {
+        let schema = await new db.table("npm-testing", {
             catchErrors: true,
             cacheLargeData: true
         });
@@ -34,11 +37,13 @@ async function test() {
                     {
                         test: "test"
                     },
-                    { returnData: true }
+                    {
+                        returnData: true,
+                    }
                 )
             );
 
-            console.log("Added test to schema with value object {test: 'test'}");
+            console.log("Added data to test.test");
 
             console.log(
                 await schema.push("test.tests", "test", {

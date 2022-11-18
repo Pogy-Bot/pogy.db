@@ -76,6 +76,9 @@ export type CustomizedTable<T = unknown> = {
             database?: {
                 ttl?: number;
             };
+            redis?: {
+                ttl?: number;
+            };
         }
     ) => Promise<null | boolean | T>;
     add: (

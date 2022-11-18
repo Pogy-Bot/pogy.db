@@ -1,2 +1,1 @@
-- Add redis key expiration
-- Add redis clearing (FLUSHALL)
+- Add redis clearing (FLUSHALL) 

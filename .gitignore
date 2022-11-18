@@ -7,3 +7,4 @@ nbproject/private
 .vs/
 node_modules/
 *.log
+.todo.dev
