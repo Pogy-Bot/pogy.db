@@ -6,19 +6,22 @@
 Pogy.db is a mongoose **(v.6.5.2)** based database which is used in Pogy. Our database makes it easy for migrations, complicated queries, supports in map caching, logging to know what is happening within the database and more.
 
 -   Endured storage, your data doesn't disappear on restarts.
+-   Supports both mongoose and redis TTL.
 -   Migrations, to backup your data every once in a while.
 -   Caching using Maps or Redis, to speed up your queries.
--   Logging, get a log of when the database gets online, or offline.
+-   Logging, get real-time updates on what is happening within the database and redis.
 -   Ping, check the execution time of your queries.
--   Fully customizable, you can customize your database options as you want.
+-   Fully customizable, you can customize your database, tables and queries.
 -   Built in support for Redis, that means you move from Maps to Redis as your application grows.
+-   Beginner Friendly, Dot notation support, Asynchronous, and easy to use.
 
+
+### Help
+> [Click here](https://pogy.xyz/support) to join our support server.
 ## Download
 
-```
-npm i pogy.db
------- or ---------------------
-yarn add pogy.db
+```bash
+npm install pogy.db --save
 ```
 
 ## Example
@@ -29,15 +32,21 @@ const database = require("pogy.db");
 import database from "pogy.db";
 
 async function start() {
+
   //start the connection to the database
   await database.connect(
     "mongodb://localhost:27017/test",
     {
-      cache: true,
-      hidelogs: false,
-      logFile: "./logs/database.log",
+      cache: {
+        toggle: true,
+        cacheOnly: false
+      },
+      logs: {
+        file: "database.log",
+        hidden: false
+      },
       redis: {
-        url: "redis://localhost:6379", // redis connection url (optional, if not specified, cache will be stored using Maps)
+        url: "redis://localhost:6379",
       }
     },
     {
@@ -51,18 +60,13 @@ async function start() {
 
   // Create a table or what you call as a collection
   // this will create a table called "users" if its not already created.
-  // if it is already created, it will just return the table.
+  // extended from Model<CollectionInterface<unknown>>
   const schema = await new database.table("users", {
-    catchErrors: true, // logs errors if there's an error in the function
+    cacheLargeData: false,
+    catchErrors: true
   });
 
-  // if the schema is available and the database is connected
   if (schema) {
-    /*
-     Setting an object in the database:
-     creates { id: "710465231779790849", username: "Peter_#4444" } in "discord"
-     @returns {null | boolean | any} The result of the operation or the data if returnData is true
-   */
     await schema.set(
       "discord",
       {
@@ -70,112 +74,52 @@ async function start() {
         username: "Peter_#4444",
       },
       {
-        returnData: true, //if false it will return true if successful
+        returnData: true,
+        database: {
+          ttl: 1
+        },
+        redis: {
+          ttl: 1
+        },
+        cache: {
+          toggle: true,
+          cacheOnly: false,
+        }
       }
     );
 
-    /*
-     Pushing an element to an array in the database:
-     @returns {null | boolean | any} The result of the operation or the data if returnData is true
-    */
+
     await schema.push("discord.badges", "verified");
 
-    /*
-     Pulling / Removing an element from an array in the database:
-     @returns {null | boolean | any} The result of the operation or the data if returnData is true
-    */
     await schema.pull("discord.badges", "verified");
 
-    /*
-      Add a value (number) to a key in the database
-      discord.message_count will be incremented by 1 which should now give 1
-      @returns {null | boolean | any} The result of the operation or the data if returnData is true
-    */
     await schema.add("discord.message_count", 1);
 
-    /*
-      Subtract a value (number) in the database
-      discord.message_count will be decremented by 1 which should now give 0
-      @returns {null | boolean | any} The result of the operation or the data if returnData is true
-    */
     await schema.subtract("discord.message_count", 1);
 
-    /*
-      Get the value of a key in the database
-      returns ["verified"]
-    */
     await schema.get("discord.badges");
 
-    /*
-      Get the value of a key in the database (boolean)
-      returns true
-    */
     await schema.has("discord.badges"); // -> true
 
-    /*
-      Get the value of a key in the database (boolean)
-      returns true
-    */
     await schema.delete("discord.badges");
 
-    /*
-      Returns all the schemas in the table
-      { id: "710465231779790849", username: "Peter_#4444", message_count: 0 }
-      options available: documentForm (boolean) -> returns the object as document arrays used for migrations
-    */
+    await schema.shift("discord.badges");
+
+    await schema.unshift("discord.badges", "verified");
+
+    await schema.stats();
+
     await schema.all({
-      documentForm: true or false
+      documentForm: false,
+      cache: {
+        cacheOnly: false;
+     },
+     limit: 10,
+     sort: "id",
+     filter: (doc) => doc.id === "710465231779790849"
     });
 
-    /*
-     Drop/delete the table from the database, boolean.
-     returns true
-    */
     await schema.drop();
-
-    /* Some more Options */
-    const anotherSchema = await new database.table("users", {
-      cacheLargeData: true,
-      catchErrors: true, // logs errors if there's an error in the function
-    });
-
-    // cacheLargeData will cache large data. For example:
-    await schema.set("discord", {
-      id: "710465231779790849",
-      username: "Peter_#4444",
-      message_count: 0,
-    }); // this will cache "discord" with the whole object, so if your schema is small you can turn it on, but if its big we recommend you turn it off as it will overload your memory.
-
-    // this applies to all functions like add, subtract, set, get, has, delete, push... You don't want to cache large data its better to cache small data like something.data.value rather than all the "something" object.
-
-    /* Some more Options */
-
-    // do you want to cache certain functions but not cache others?
-
-    // start by disabling the cache on the database
-    await database.connect(
-      "mongodb://localhost:27017/test",
-      {
-        cache: false, //cache was disabled
-        hidelogs: false,
-        logFile: "./logs/database.log",
-      },
-      {
-        keepAlive: true,
-        minPoolSize: 3,
-        maxPoolSize: 10,
-        serverSelectionTimeoutMS: 10000,
-        socketTimeoutMS: 60000,
-      }
-    );
-
-    // Now you can enable cache in the functions as so
-    // table.get(key, {cache: true})
-    // table.set(key, value, {cache: true})
-    // table.add(key, value, {cache: true})
-    // table.subtract(key, value, {cache: true})
-    // table.push(key, value, {cache: true})
-    // table.pull(key, value, {cache: true})
   }
 }
 
@@ -195,6 +139,12 @@ but replace "mongoURL" with the url of your database and "redisURL" (OPTIONAL) w
 -   example: `npm test --mongodb://localhost:27017/test --redis://localhost:6379`
 -   -   No Redis: `npm test --mongodb://localhost:27017/test`
 
+## What you need to know
+
+-   When using database ttl, the existing cache will automatically be detected and deleted once the main data has been deleted from the database.
+-   If redis is somehow unavailable, the library will rely on raw mongoose.
+-   All functions such as .delete() and .drop() are designed to delete existing cache related to the key when executed, so don't worry about useless cache taking up space.
+
 ## Documentation
 
 All functions in this package return a promise. So `await` is needed to get the result.
@@ -210,93 +160,83 @@ All functions in this package return a promise. So `await` is needed to get the 
 
 ### connect(url, options, mongooseOptions)
 
-```js
-/*
-  @param {string} url - The url to the database.
-  @param {object} options - The options for the database.
-  @param {object} mongooseOptions - The options for the mongoose connection.
-*/
+<table>
+ <th>
+  <td><b>url</b></td>
+  <td><b>options</b></td>
+  <td><b>mongooseOptions</b></td>
+</th>
+<tr>
+  <td>Type</td>
+  <td><b>string</b></td>
+  <td><a href="#connect-options">Click Here</a></td>
+  <td><a href="#connect-mongooseoptions">Click Here</a></td>
+</tr>
 
-// available options
-options = {
-    cache: true, // Whether or not to cache the data.
-    hidelogs: false, // Whether or not to hide the logs.
-    logFile: "./logs/database.log", // The file to log to.
-    redis: {
-        url: "redis://localhost:6379" // The url to the redis server.
-    }
-};
+</table>
 
-//if you don't want to log anything
-options = {
-    cache: true,
-    redis: false // redis is disabled, so cache will be using Maps
-};
+#### connect-options
 
-// default mongooseOptions
-mongooseOptions = {
-    keepAlive: true, // Whether or not to keep the connection alive.
-    minPoolSize: 3, // The minimum pool size.
-    maxPoolSize: 10, // The maximum pool size.
-    serverSelectionTimeoutMS: 10000, // The server selection timeout.
-    socketTimeoutMS: 60000 // The socket timeout.
+> defined in src\types\index.ts [5-17]
 
-    // all options are available on mongoose v6.5.2's documentation
-    // https://mongoosejs.com/docs/connections.html#connection-string-options
+```ts
+{
+    cache?: {
+        toggle?: boolean; // enable cache by default
+        cacheOnly?: boolean; // only use cache by default
+    };
+    logs?: {
+        hidden?: boolean; // hide logs
+        file?: string; // log file path (ex: src/database.log)
+    };
+    redis?: {
+        url: string; // redis connection url (ex: redis://localhost:6379)
+    };
 };
 ```
 
-So, connecting your database would be
+#### connect-mongooseOptions
+
+> Mongoose options are defined in the [Mongoose Documentation](https://mongoosejs.com/docs/guide.html#options). They are the options mongoose uses to connect to the database.
+
+**default:**
 
 ```js
-const database = require("pogy.db");
-//or
-import database from "pogy.db";
-await database.connect(
-    "mongodb://localhost:27017/test",
-    {
-        cache: true, // cache the data
-        hidelogs: false, // don't hide the logs
-        logFile: "./logs/database.log", // log to the database events in logs/database.log
-        redis: {
-            url: "redis://localhost:6379" // The url to the redis server.
-        }
-    },
-    {
-        // mongoose options
-        keepAlive: true,
-        minPoolSize: 3,
-        maxPoolSize: 10,
-        serverSelectionTimeoutMS: 10000,
-        socketTimeoutMS: 60000
-    }
-);
+{
+   keepAlive: true,
+   minPoolSize: 3,
+   maxPoolSize: 10,
+   serverSelectionTimeoutMS: 10000,
+   socketTimeoutMS: 60000
+}
 ```
 
 ## TABLE
 
 ### table(name)
 
-This function is used to create a table in the database or fetch an existing table; its as if you are creating a schema in mongoose.
+This function is used to create a table in the database or fetch an existing table; its as if you are creating a model in mongoose.
+
+> **returns:** `CustomizedTable` (src/types/index.ts [56-154])
+
+**options:**
+
+```ts
+tableName: string, // table name
+tableOptions?: {
+      cacheLargeData?: boolean; // cache large data (first key) like table.set(key) instead of table.set(key.subKey)
+      catchErrors?: boolean; // log the errors of the table if there are ever any
+}
+```
+
+**example:**
 
 ```js
-/*
-  table(name)
-  @param {string} name - The name of the table
-  @returns {object | boolean} - The table or false if the database is not connected.
-*/
 const users = await new database.table("users", {
-    catchErrors: true // logs errors if there's an error in the function
+    catchErrors: true
 });
 
-// if the schema is available and the database is connected
 if (users) {
-    /*
-    set(key, value)
-    @param {string} key - The key to set.
-    @param {object | string | number} value - The value to set.
-    @returns {null | boolean | any} The result of the operation or the data if returnData is true
-  */
     await users.set(message.author.id, {
         username: message.author.username,
         discriminator: message.author.discriminator,
@@ -306,158 +246,372 @@ if (users) {
         message_count: 0
     });
 
-    /*
-    get(key)
-    @param {string} key - The key to get.
-    @returns {object | string | undefined | any} - The value of the key.
-  */
     const username = await users.get(`${message.author.id}.username`);
     console.log(username); // -> "Peter_#4444"
 }
 ```
 
-### get(key)
+### get(key, options)
 
 This function is used to get the value of a key in the database.
 
+> **returns:** `Promise<null | string | number | unknown>`)
+
+**params:**
+
+```ts
+key: string, // the key to get the value of
+options?: {
+ cache?: {
+   toggle?: boolean; // if true, it will cache the data, if false it will only take the data from the database
+   cacheOnly?: boolean; // if true, it will only take the data from the cache
+ };
+}
+
+```
+
+**example:**
+
 ```js
-const user = await users.get(message.author.id);
+const user = await users.get(message.author.id, {
+    cache: {
+        toggle: true,
+        cacheOnly: false
+    }
+});
 console.log(user); // -> { username: "Peter_#4444", discriminator: "4444", id: "710465231779790849", avatar: "avatar", badges: [], message_count: 0 }
 
 const username = await users.get(`${message.author.id}.username`);
 console.log(username); // -> "Peter_#4444"
 ```
 
-### set(key,value)
+### set(key,value, options)
 
 This function is used to set the value of a key in the database.
 
-```js
-/*
-  set(key, value)
-  @param {string} key - The key to set.
-  @param {object | string | number} value - The value to set.
-  @returns {null | boolean | any} The result of the operation or the data if returnData is true
-*/
-await users.set(`${message.author.id}.username`, "Peter_#4444"); // -> true
+> **returns:** `Promise<null | boolean | unkown>`)
+
+**params:**
+
+```ts
+ key: string, // the key to set the value of
+ value: string | number | boolean | unknown, // the value to set the key to
+ options?: {
+    cache?: {
+      toggle?: boolean; // if true, it will cache the data, if false it will only take the data from the database
+      cacheOnly?: boolean; // if true, it will only take the data from the cache
+    };
+    returnData?: boolean; // if true, it will return the data instead of a boolean
+    database?: {
+      ttl?: number; // the time to expire the data in the database (in seconds)
+    };
+    redis?: {
+      ttl?: number; // the time to expire the data in the redis cache (in seconds)
+    };
+  }
 ```
 
-### add(key, number)
+**example:**
+
+```ts
+await users.set(`${message.author.id}.username`, "Peter_#4444", {
+    cache: {
+        toggle: true,
+        cacheOnly: false
+    },
+    returnData: true,
+    database: {
+        ttl: 60
+    },
+    redis: {
+        ttl: 60
+    }
+}); // -> { username: "Peter_#4444", discriminator: "4444", id: "710465231779790849", avatar: "avatar", badges: [], message_count: 0 }
+```
+
+### add(key, number, options)
 
 This function is used to add a number to a key in the database.
 
-```js
-/*
-  add(key, number)
-  @param {string} key - The key to add to.
-  @param {number} number - The number to add | 0 if not specified.
-  @returns {null | boolean | any} The result of the operation or the data if returnData is true
-*/
-await users.add(`${message.author.id}.message_count`, 1);
+> **returns:** `Promise<null | boolean | unkown>`)
 
-/*
-  get(key)
-  @param {string} key - The key to get.
-  @returns {object | string | undefined | any} - The value of the key.
-*/
+**params:**
 
-const messageCount = await users.get(`${message.author.id}.message_count`);
-console.log(messageCount); // -> 1
+```ts
+ key: string, // the key to add the number to
+ value: number | string, // the number to add to the key
+ options?: {
+   cache?: {
+     toggle?: boolean; // if true, it use the cache
+     cacheOnly?: boolean; // if true, it will only set the data in the cache
+   };
+   returnData?: boolean; // if true, it will return the data instead of a boolean
+  }
 ```
 
-### subtract(key, number)
+**example**
+
+```js
+await users.add(`${message.author.id}.message_count`, 1);
+```
+
+### subtract(key, number,options)
 
 This function is used to subtract a number from a key in the database.
 
-```js
-/*
-  subtract(key, number)
-  @param {string} key - The key to subtract to.
-  @param {number} number - The number to subtract | 0 if not specified.
-  @returns {null | boolean | any} The result of the operation or the data if returnData is true
-*/
-await users.subtract(`${message.author.id}.message_count`, 1);
+> **returns:** `Promise<null | boolean | unkown>`)
 
-/*
-  get(key)
-  @param {string} key - The key to get.
-  @returns {object | string | undefined | any} - The value of the key.
-*/
+**params:**
 
-const messageCount = await users.get(`${message.author.id}.message_count`);
-console.log(messageCount); // -> 0
+```ts
+ key: string, // the key to subtract the number from
+ value: number | string, // the number to subtract from the key
+ options?: {
+   cache?: {
+     toggle?: boolean; // if true, it use the cache
+     cacheOnly?: boolean; // if true, it will only set the data in the cache
+   };
+   returnData?: boolean;
+  }
 ```
 
-### has(key)
-
-This function is used to check if a key exists in the database. (boolean)
+**example**
 
 ```js
-/*
-  has(key)
-  @param {string} key - The key to check.
-  @returns {boolean} - Whether or not the key exists.
-*/
-await users.has(message.author.id); // -> true
+await users.subtract(`${message.author.id}.message_count`, 1);
+```
+
+### has(key, options)
+
+This function is used to check if a key exists in the database or cache. (boolean)
+
+> **returns:** `Promise<null | boolean>`)
+
+**params:**
+
+```ts
+ key: string, // the key to check if it exists
+ options?: {
+   cache?: {
+     cacheOnly?: boolean; // if true, it will only check the cache
+   };
+ }
+```
+
+**example**
+
+```js
+await users.has(message.author.id, {
+    cache: {
+        cacheOnly: true
+    }
+}); // -> true
 await users.has(`${message.author.id}.invalid_property`); // -> false
 ```
 
-### delete(key)
+### delete(key, options)
 
 This function is used to delete a key in the database.
 
+> **returns:** `Promise<null | boolean>`)
+
+**params:**
+
+```ts
+ key: string, // the key to check if it exists
+ options?: {
+   cache?: {
+     cacheOnly?: boolean; // if true, it will only delete the cache
+   };
+ }
+```
+
+**example**
+
 ```js
-/*
-  delete(key)
-  @param {string} key - The key to delete.
-  @returns {true | null} - Whether or not the operation was successful.
-*/
 await users.delete(message.author.id); // -> true
 ```
 
-### all()
+### all(options)
 
-This function is used to get all the schemas from the table in the database.
+This function is used to get all the collections from the table in the database.
 
-```js
-/*
-  all()
-  @returns {object} - All the schemas in a table.
-*/
-const usersInDatabase = await users.all();
-console.log(usersInDatabase); // -> [{ "710465231779790849": { username: "Peter_#4444", discriminator: "4444", id: "710465231779790849", avatar: "avatar", badges: [], message_count: 0 } }]
+> **returns:** `Promise<unknown>`)
+
+**params:**
+
+```ts
+  documentForm?: boolean; // if true, it will return the data in a document form
+  cache?: {
+      cacheOnly?: boolean; // if true, it will only get the data from the cache
+  };
+  limit?: number; // the limit of the data to get
+  sort?: string; // the key to sort the data by
+  filter?: (data) => boolean; // a filter function to filter the data
 ```
 
-### push(key, element)
+**example**
+
+```js
+const usersInDatabase = await users.all({
+    documentForm: true,
+    cache: {
+        cacheOnly: false
+    },
+    limit: 10,
+    sort: "message_count",
+    filter: (data) => data.message_count > 100
+});
+```
+
+### push(key, element, options)
 
 This function is used to push an element to an array in the database or create an array if it doesn't exist.
 
+> **returns:** `Promise<null | boolean | unknown>`)
+
+**params:**
+
+```ts
+    key: string, // the key to push the element to
+    value: string | number | boolean | unknown, // the element to push to the array
+      options?: {
+        cache?: {
+             toggle?: boolean; // if true, it will use the cache
+         };
+      returnData?: boolean; // if true, it will return the data instead of a boolean
+    }
+```
+
+**example**
+
 ```js
-/*
-  push(key, element)
-  @param {string} key - The key to push to.
-  @param {object} element - The element to push.
-  @returns {null | boolean | any} The result of the operation or the data if returnData is true
-*/
 await users.push(`${message.author.id}.badges`, "bot_owner", {
-    returnData: false
+    returnData: false,
+    cache: {
+        toggle: false
+    }
 }); // -> true
-// array becomes ['verified', 'bot_owner'] if returnData: true
+```
+
+### pull(key, element, options)
+
+This function is used to pull an element from an array in the database.
+
+> **returns:** `Promise<null | boolean | unknown>`)
+
+**params:**
+
+```ts
+    key: string, // the key to push the element to
+    value: string | number | boolean | unknown, // the element to push to the array
+      options?: {
+        cache?: {
+             toggle?: boolean; // if true, it will use the cache
+         };
+      returnData?: boolean; // if true, it will return the data instead of a boolean
+    }
+```
+
+**example**
+
+```js
+await users.pull(`${message.author.id}.badges`, "bot_owner", {
+    returnData: false,
+    cache: {
+        toggle: false
+    }
+}); // -> true
+```
+
+### shift(key, element, options)
+
+This function is used to shift an element from an array in the database.
+
+> **returns:** `Promise<null | boolean | unknown>`)
+
+**params:**
+
+```ts
+    key: string, // the key to push the element to
+    value: string | number | boolean | unknown, // the element to push to the array
+      options?: {
+        cache?: {
+             toggle?: boolean; // if true, it will use the cache
+         };
+      returnData?: boolean; // if true, it will return the data instead of a boolean
+    }
+```
+
+**example**
+
+```js
+await users.shift(`${message.author.id}.badges`, "bot_owner", {
+    returnData: false,
+    cache: {
+        toggle: false
+    }
+}); // -> true
+```
+
+### unshift(key, element, options)
+
+This function is used to unshift an element to an array in the database.
+
+> **returns:** `Promise<null | boolean | unknown>`)
+
+**params:**
+
+```ts
+    key: string, // the key to push the element to
+    value: string | number | boolean | unknown, // the element to push to the array
+      options?: {
+        cache?: {
+             toggle?: boolean; // if true, it will use the cache
+         };
+      returnData?: boolean; // if true, it will return the data instead of a boolean
+    }
+```
+
+**example**
+
+```js
+await users.unshift(`${message.author.id}.badges`, "bot_owner", {
+    returnData: false,
+    cache: {
+        toggle: false
+    }
+}); // -> true
 ```
 
 ### drop()
 
 This function is used to drop the entire table!
 
+> **returns:** `Promise<null | boolean>`)
+
+**example**
+
 ```js
-/*
-  drop()
-  @returns {boolean} - Whether or not the operation was successful.
-*/
 await users.drop(); // -> true
 ```
 
-### table (mongoose.Collection)
+### stats()
+
+This function is used to get the stats of the table.
+
+> **returns:** `Promise<unknown>`
+
+**example**
+
+```js
+const stats = await users.stats();
+console.log(stats);
+```
+
+### table
+
+> extended from `Model<CollectionInterface<unknown>>` _(refer to src\types\index.ts)_
 
 What if those functions are not enough and you want to use mongoose functions?
 You can use `<your-table>.table.<function>` to call the function.
@@ -500,26 +654,35 @@ console.log(user);
 
 ## MIGRATE
 
-### migrate(schema, newConnection)
+### migrate(schema, newConnection, options)
 
 This function is used to migrate the table to a new database connection.
 
+**params:**
+
+```ts
+schema: string, // the schema to migrate to
+newConnection: string, // the new connection URL to migrate to
+options: {
+  logs?: {
+        hidden?: boolean; // log realtime migration debug information
+  };
+}
+```
+
+**example**
+
 ```js
 const users = await new database.table("users", {
-    catchErrors: true // logs errors if there's an error in the function
+    catchErrors: true
 });
 
 // if the database is online
 if (users) {
-    /*
-    migrate(schema, newConnection)
-    @param {string} schema - The schema name to migrate
-    @param {object} newConnection - The new database connection.
-    @param {object} options - The migration options. (hideLogs - Whether or not to hide the logs) (model - The model to use default [id: String, data: Object])
-    @returns {object} - the migration status
-  */
     await database.migrate("users", "mongodb://localhost:27017/test2", {
-        hideLogs: false
+        logs: {
+            hideLogs: false
+        }
     });
 }
 ```
@@ -528,22 +691,30 @@ if (users) {
 
 Get the execution time of your queries.
 
+**results:**
+
+```ts
+cached: boolean; // if the cache is enabled
+tableName: string; // the table name
+dataToGet: string; // the data to get
+timeToGetTable: number; // the time to get the table
+timeToGetData: number; // the time to get the data
+totalPing: number; // the total ping
+redisPing: number | "Redis not enabled."; // the redis ping
+```
+> If the table or data is not found it will return false data.
+
+**example:**
 ```js
 const database = require('pogy.db');
 
 const ping = database db.ping({
-      tableName: "users", // fetch one of the tables
-      dataToGet: "710465231779790849" // fetch one existing data from the table
+      tableName: "users",
+      dataToGet: "710465231779790849"
 });
 
 console.log(ping);
 ```
-
-if the table or data is not found it will return "false" (boolean)
-
-#### or
-
-if the table is found it will return:
 
 ```json
 {
@@ -553,7 +724,8 @@ if the table is found it will return:
     "timeToGetTable": 0.03450000286102295, // the time taken to get the table in ms
     "timeToGetData": 0.011600017547607422, // the time taken to get the data in ms
     "redisPing": 1.380900003015995, // the time taken to ping redis, if redis is enabled
-    "totalPing": 0.04610002040863037 // the total ping (table and data) in ms
+    "totalPing": 0.04610002040863037, // the total ping (table and data) in ms
+    "errors": [] // the errors if there's any
 }
 ```
 
@@ -566,7 +738,7 @@ const database = require("pogy.db");
 
 const isOnline = database.isOnline();
 
-console.log(isOnline); //true or false
+console.log(isOnline); // true or false
 ```
 
 ## DatabaseManager
@@ -584,6 +756,7 @@ DatabaseManager.cache; // the cache, returns null if the cache is not enabled.
 DatabaseManager.tables; // the tables, returns an empty array if no tables are created.
 DatabaseManager.events; // the event emitter, databaseUp or databaseDown
 DatabaseManager.redis; // the redis client, returns null if redis is not connected.
+DatabaseManager.redisURL; // the redis url specified
 ```
 
 #### How is this useful?
@@ -696,9 +869,17 @@ async function connect() {
     await database.connect(
         "mongodb://localhost:27017/test",
         {
-            cache: true,
-            hidelogs: false,
-            logFile: "./logs/database.log"
+            cache: {
+                toggle: true,
+                cacheOnly: false
+            },
+            logs: {
+                file: "database.log",
+                hidden: false
+            },
+            redis: {
+                url: "redis://localhost:6379"
+            }
         },
         {
             keepAlive: true,
@@ -709,65 +890,24 @@ async function connect() {
         }
     );
 
-    client.database = database.DatabaseManager.client;
-
     // every 24 hours
     cron.schedule("0 0 * * *", async () => {
         // migrate a certain table
         const migration1 = await database.migrate("users", "mongodb://localhost:27017/test2", {
-            hideLogs: false, // add migration logs to your main logFile
             model: new mongoose.Schema({
                 id: String,
                 data: Object
             }) // the model of the table, this is the default one but you can change it if you wanna customize your table.
         });
 
-        console.log(migration1);
-        /*
-       returns if there is no error:
-       {
-        error: false,
-        date: date of migration in ms,
-        timeTaken: time taken to migrate in ms,
-        table: the table name,
-        dataCreated: the data created length
-       }
-
-       returns if there is an error:
-       {
-        table: the table name,
-        error: the error
-       }
-     */
-
         // or automatically migrate all tables
         database.DatabaseManager.tables.forEach(async (table) => {
             const migrationData = await database.migrate(table, "mongodb://localhost:27017/test2", {
-                hideLogs: false, // add migration logs to your main logFile,
                 model: new mongoose.Schema({
                     id: String,
                     data: Object
                 }) // the model of the table, this is the default one but you can change it if you wanna customize your table.
             });
-
-            console.log(migrationData);
-
-            /*
-          returns if there is no error:
-          {
-           error: false,
-           date: date of migration in ms,
-           timeTaken: time taken to migrate in ms,
-           table: the table name,
-           dataCreated: the data created length
-          }
-
-          returns if there is an error:
-          {
-           table: the table name,
-           error: the error
-          }
-        */
         });
     }).start();
 }
@@ -775,66 +915,56 @@ async function connect() {
 connect();
 ```
 
-#### How can I use this?
+#### Migration Results
 
-You can for instance send discord webhooks using discord.js to send a webhook once a migration is completed with the information.
+```ts
+errors: Array<{
+    error: Error | boolean;
+    date: number;
+    step: number;
+}>; // the errors if there's any
+date: number; // the date of the migration
+timeTaken: number; // the time taken to migrate
+table: string;  // the table migrated
+dataCreated: number; // the amount of data created
+```
 
-```js
-const DiscordClient = require("discord.js");
-const client = new DiscordClient();
-const database = require("pogy.db");
-//or
-import database from "pogy.db";
+## Using Redis
 
-async function connect() {
-    await database.connect(
-        "mongodb://localhost:27017/test",
-        {
-            cache: true,
-            hidelogs: false,
-            logFile: "./logs/database.log"
-        },
-        {
-            keepAlive: true,
-            minPoolSize: 3,
-            maxPoolSize: 10,
-            serverSelectionTimeoutMS: 10000,
-            socketTimeoutMS: 60000
-        }
-    );
+To use Redis, you must have RedisJSON installed on your Redis server. RedisJSON allows us to store JSON data in Redis.
 
-    client.database = database.DatabaseManager.client;
+-   [RedisJSON Docs](https://github.com/RedisJSON/RedisJSON/)
 
-    // create a migration on ready
-    client.on("ready", async () => {
-        client.database.tables
-            .forEach(async (table) => {
-                const migrationData = await database.migrate(table, "mongodb://localhost:27017/test2", {
-                    hideLogs: false, // add migration logs to your main logFile,
-                    model: {
-                        id: String,
-                        data: Object
-                    } // the model of the table, this is the default one but you can change it if you wanna customize your table.
-                });
+run this command after instalation
 
-                if (migrationData.error) {
-                    //send to migration error webhook
-                    const webhook = new DiscordClient.WebhookClient({
-                        url: "Webhook URL"
-                    });
-                    webhook.send(`Migration of ${migrationData.table} encountered an error!\nError: ${migrationData.error.message}`);
-                } else {
-                    const webhook = new DiscordClient.WebhookClient({
-                        url: "Webhook URL"
-                    });
-                    webhook.send(`Migration of ${migrationData.table} completed!\nData Created: ${migrationData.dataCreated}\nDate: ${new Date(migrationData.date)}\nTime Taken: ${migrationData.timeTaken}ms`);
-                }
-            })
-            .catch(console.error);
-    });
+```bash
+redis-server --loadmodule ./target/release/librejson.so
+```
 
-    client.login("token");
-}
+## Hosting Mongo Locally
 
-connect();
+If you are hosting mongo locally you must turn your database into a Replica Set.
+
+First, host mongo on another port ex.27018
+
+```bash
+mongod --port 27018 --replSet any-name --bind_ip localhost
+```
+
+Then, open another terminal and execute:
+
+```bash
+mongosh --port 27018
+```
+
+then
+
+```bash
+rs.initiate()
+```
+
+This will initialize your database as a replica set.
+
+```
+
 ```

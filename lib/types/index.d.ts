@@ -52,7 +52,7 @@ export declare type CustomizedTable<T = unknown> = {
     }) => Promise<null | string | number | T>;
     set: (key: string, value: string | number | boolean | T, options?: {
         cache?: {
-            toggle: boolean;
+            toggle?: boolean;
             cacheOnly?: boolean;
         };
         returnData?: boolean;
@@ -65,14 +65,14 @@ export declare type CustomizedTable<T = unknown> = {
     }) => Promise<null | boolean | T>;
     add: (key: string, value: number | string, options?: {
         cache?: {
-            toggle: boolean;
+            toggle?: boolean;
             cacheOnly?: boolean;
         };
         returnData?: boolean;
     }) => Promise<null | boolean | T>;
     subtract: (key: string, value: number | string, options?: {
         cache?: {
-            toggle: boolean;
+            toggle?: boolean;
             cacheOnly?: boolean;
         };
         returnData?: boolean;
@@ -89,30 +89,31 @@ export declare type CustomizedTable<T = unknown> = {
     }) => Promise<boolean | null>;
     push: (key: string, value: string | number | boolean | T, options?: {
         cache?: {
-            toggle: boolean;
+            toggle?: boolean;
         };
         returnData?: boolean;
     }) => Promise<null | boolean | T>;
     pull: (key: string, value: string | number | boolean | T, options: {
         cache?: {
-            toggle: boolean;
+            toggle?: boolean;
         };
-        returnData: true;
+        returnData?: boolean;
     }) => Promise<null | boolean | T>;
     shift: (key: string, options: {
         cache?: {
-            toggle: boolean;
+            toggle?: boolean;
         };
-        returnData: true;
+        returnData?: boolean;
     }) => Promise<null | boolean | unknown>;
     unshift: (key: string, value: string | number | boolean | unknown, options: {
         cache?: {
-            toggle: boolean;
+            toggle?: boolean;
         };
-        returnData: true;
+        returnData?: boolean;
     }) => Promise<null | boolean | unknown>;
     all: (options?: TableAllOptions) => Promise<T>;
     drop: () => Promise<boolean | null>;
+    stats: () => Promise<unknown>;
 };
 export declare type pingOptions = {
     tableName: string;

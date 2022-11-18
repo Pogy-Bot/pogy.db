@@ -21,6 +21,7 @@ async function test() {
             hidden: false
         }
     });
+    console.log(db)
     if (database) {
         console.log("Starting tests");
         let schema = await new db.table("npm-testing", {
@@ -38,7 +39,7 @@ async function test() {
                         test: "test"
                     },
                     {
-                        returnData: true,
+                        returnData: true
                     }
                 )
             );

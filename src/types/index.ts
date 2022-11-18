@@ -69,7 +69,7 @@ export type CustomizedTable<T = unknown> = {
         value: string | number | boolean | T,
         options?: {
             cache?: {
-                toggle: boolean;
+                toggle?: boolean;
                 cacheOnly?: boolean;
             };
             returnData?: boolean;
@@ -86,7 +86,7 @@ export type CustomizedTable<T = unknown> = {
         value: number | string,
         options?: {
             cache?: {
-                toggle: boolean;
+                toggle?: boolean;
                 cacheOnly?: boolean;
             };
             returnData?: boolean;
@@ -97,7 +97,7 @@ export type CustomizedTable<T = unknown> = {
         value: number | string,
         options?: {
             cache?: {
-                toggle: boolean;
+                toggle?: boolean;
                 cacheOnly?: boolean;
             };
             returnData?: boolean;
@@ -124,7 +124,7 @@ export type CustomizedTable<T = unknown> = {
         value: string | number | boolean | T,
         options?: {
             cache?: {
-                toggle: boolean;
+                toggle?: boolean;
             };
             returnData?: boolean;
         }
@@ -134,18 +134,18 @@ export type CustomizedTable<T = unknown> = {
         value: string | number | boolean | T,
         options: {
             cache?: {
-                toggle: boolean;
+                toggle?: boolean;
             };
-            returnData: true;
+            returnData?: boolean;
         }
     ) => Promise<null | boolean | T>;
     shift: (
         key: string,
         options: {
             cache?: {
-                toggle: boolean;
+                toggle?: boolean;
             };
-            returnData: true;
+            returnData?: boolean;
         }
     ) => Promise<null | boolean | unknown>;
     unshift: (
@@ -153,13 +153,14 @@ export type CustomizedTable<T = unknown> = {
         value: string | number | boolean | unknown,
         options: {
             cache?: {
-                toggle: boolean;
+                toggle?: boolean;
             };
-            returnData: true;
+            returnData?: boolean;
         }
     ) => Promise<null | boolean | unknown>;
     all: (options?: TableAllOptions) => Promise<T>;
     drop: () => Promise<boolean | null>;
+    stats: () => Promise<unknown>
 };
 
 /* The ping options */

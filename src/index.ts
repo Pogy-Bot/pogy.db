@@ -395,7 +395,7 @@ export = {
                 value: string | number | boolean | unknown,
                 options?: {
                     cache?: {
-                        toggle: boolean;
+                        toggle?: boolean;
                         cacheOnly?: boolean;
                     };
                     returnData?: boolean;
@@ -540,7 +540,7 @@ export = {
                 value: number | string,
                 options?: {
                     cache?: {
-                        toggle: boolean;
+                        toggle?: boolean;
                         cacheOnly?: boolean;
                     };
                     returnData?: boolean;
@@ -689,7 +689,7 @@ export = {
                 value: number | string,
                 options?: {
                     cache?: {
-                        toggle: boolean;
+                        toggle?: boolean;
                         cacheOnly?: boolean;
                     };
                     returnData?: boolean;
@@ -988,7 +988,7 @@ export = {
                 value: string | number | boolean | unknown,
                 options?: {
                     cache?: {
-                        toggle: boolean;
+                        toggle?: boolean;
                     };
                     returnData?: boolean;
                 }
@@ -1068,9 +1068,9 @@ export = {
                 value: string | number | boolean | unknown,
                 options: {
                     cache?: {
-                        toggle: boolean;
+                        toggle?: boolean;
                     };
-                    returnData: true;
+                    returnData?: boolean;
                 }
             ): Promise<null | boolean | unknown> {
                 try {
@@ -1145,9 +1145,9 @@ export = {
                 key: string,
                 options: {
                     cache?: {
-                        toggle: boolean;
+                        toggle?: boolean;
                     };
-                    returnData: true;
+                    returnData?: boolean;
                 }
             ): Promise<null | boolean | unknown> {
                 try {
@@ -1223,9 +1223,9 @@ export = {
                 value: string | number | boolean | unknown,
                 options: {
                     cache?: {
-                        toggle: boolean;
+                        toggle?: boolean;
                     };
-                    returnData: true;
+                    returnData?: boolean;
                 }
             ): Promise<null | boolean | unknown> {
                 try {
