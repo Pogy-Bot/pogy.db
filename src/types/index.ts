@@ -160,7 +160,7 @@ export type CustomizedTable<T = unknown> = {
     ) => Promise<null | boolean | unknown>;
     all: (options?: TableAllOptions) => Promise<T>;
     drop: () => Promise<boolean | null>;
-    stats: () => Promise<unknown>
+    stats: () => Promise<unknown>;
 };
 
 /* The ping options */

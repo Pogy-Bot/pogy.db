@@ -15,9 +15,10 @@ Pogy.db is a mongoose **(v.6.5.2)** based database which is used in Pogy. Our da
 -   Built in support for Redis, that means you move from Maps to Redis as your application grows.
 -   Beginner Friendly, Dot notation support, Asynchronous, and easy to use.
 
-
 ### Help
+
 > [Click here](https://pogy.xyz/support) to join our support server.
+
 ## Download
 
 ```bash
@@ -702,9 +703,11 @@ timeToGetData: number; // the time to get the data
 totalPing: number; // the total ping
 redisPing: number | "Redis not enabled."; // the redis ping
 ```
+
 > If the table or data is not found it will return false data.
 
 **example:**
+
 ```js
 const database = require('pogy.db');
 
@@ -925,7 +928,7 @@ errors: Array<{
 }>; // the errors if there's any
 date: number; // the date of the migration
 timeTaken: number; // the time taken to migrate
-table: string;  // the table migrated
+table: string; // the table migrated
 dataCreated: number; // the amount of data created
 ```
 

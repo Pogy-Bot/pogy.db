@@ -467,7 +467,7 @@ export = {
                     } else {
                         if (isCacheEnabled && tableOptions && tableOptions.cacheLargeData) {
                             if (DatabaseManager.redis) {
-                                const redisTTL = (options?.redis?.ttl) ?? -1;
+                                const redisTTL = options?.redis?.ttl ?? -1;
 
                                 if (typeof value === "object" && value) {
                                     try {
