@@ -121,7 +121,7 @@ start();
 
 ## Test this Library
 
-You can test all the functions at once by typing:
+You can test all the functions when downloading the repo at once by typing:
 
 ```bash
 node test --mongoURL --redisURL
@@ -129,8 +129,8 @@ node test --mongoURL --redisURL
 
 but replace "mongoURL" with the url of your database and "redisURL" (OPTIONAL) with the url of your redis server.
 
--   example: `npm test --mongodb://localhost:27017/test --redis://localhost:6379`
--   -   No Redis: `npm test --mongodb://localhost:27017/test`
+-   example: `node test --mongodb://localhost:27017/test --redis://localhost:6379`
+-   -   No Redis: `node test --mongodb://localhost:27017/test`
 
 ## What you need to know
 

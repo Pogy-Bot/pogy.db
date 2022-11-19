@@ -94,7 +94,7 @@ export declare type CustomizedTable<T = unknown> = {
     ) => Promise<null | boolean | T>;
     has: (
         key: string,
-        options: {
+        options?: {
             cache?: {
                 cacheOnly?: boolean;
             };
@@ -102,7 +102,7 @@ export declare type CustomizedTable<T = unknown> = {
     ) => Promise<boolean | null>;
     delete: (
         key: string,
-        options: {
+        options?: {
             cache?: {
                 cacheOnly?: boolean;
             };
@@ -121,7 +121,7 @@ export declare type CustomizedTable<T = unknown> = {
     pull: (
         key: string,
         value: string | number | boolean | T,
-        options: {
+        options?: {
             cache?: {
                 toggle?: boolean;
             };
@@ -130,7 +130,7 @@ export declare type CustomizedTable<T = unknown> = {
     ) => Promise<null | boolean | T>;
     shift: (
         key: string,
-        options: {
+        options?: {
             cache?: {
                 toggle?: boolean;
             };
@@ -140,7 +140,7 @@ export declare type CustomizedTable<T = unknown> = {
     unshift: (
         key: string,
         value: string | number | boolean | unknown,
-        options: {
+        options?: {
             cache?: {
                 toggle?: boolean;
             };

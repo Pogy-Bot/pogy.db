@@ -27,7 +27,7 @@ declare const _default: {
      * @param {string} newConnection - The new database connection.
      * @returns {migrationObject} - The migrated data.
      */
-    migrate: (schema: string, newConnection: string, options: migrateOptions) => Promise<migrationObject>;
+    migrate: (schema: string, newConnection: string, options?: migrateOptions) => Promise<migrationObject>;
     /**
      * Get a table from the database
      * @param {string} table - The name of the table

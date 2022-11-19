@@ -111,7 +111,7 @@ export = {
      * @param {string} newConnection - The new database connection.
      * @returns {migrationObject} - The migrated data.
      */
-    migrate: async function (schema: string, newConnection: string, options: migrateOptions): Promise<migrationObject> {
+    migrate: async function (schema: string, newConnection: string, options?: migrateOptions): Promise<migrationObject> {
         const errors = [];
         const currentTiming = Date.now();
         const isLogsHidden = !options || (options.logs && options.logs.hidden !== true);
@@ -417,8 +417,6 @@ export = {
                     if (targetProvided) {
                         if (isCacheEnabled) {
                             if (DatabaseManager.redis) {
-                                // check if redis is ready and connected
-
                                 const redisTTL = options?.redis?.ttl ?? -1;
 
                                 if (typeof value === "object" && value) {
@@ -821,7 +819,7 @@ export = {
              **/
             this.has = async function (
                 key: string,
-                options: {
+                options?: {
                     cache?: {
                         cacheOnly?: boolean;
                     };
@@ -879,7 +877,7 @@ export = {
              **/
             this.delete = async function (
                 key: string,
-                options: {
+                options?: {
                     cache?: {
                         cacheOnly?: boolean;
                     };
@@ -1056,7 +1054,7 @@ export = {
             this.pull = async function (
                 key: string,
                 value: string | number | boolean | unknown,
-                options: {
+                options?: {
                     cache?: {
                         toggle?: boolean;
                     };
@@ -1133,7 +1131,7 @@ export = {
              **/
             this.shift = async function (
                 key: string,
-                options: {
+                options?: {
                     cache?: {
                         toggle?: boolean;
                     };
@@ -1211,7 +1209,7 @@ export = {
             this.unshift = async function (
                 key: string,
                 value: string | number | boolean | unknown,
-                options: {
+                options?: {
                     cache?: {
                         toggle?: boolean;
                     };
