@@ -353,19 +353,7 @@ export = {
 
                     if (DatabaseManager.redis && fetchedData) {
                         if (typeof fetchedData === "string") {
-                            if (fetchedData.toString().startsWith("boolean:")) {
-                                fetchedData = fetchedData.replace("boolean:", "");
-                                if (fetchedData === "true") fetchedData = true;
-                                else if (fetchedData === "false") fetchedData = false;
-                            } else if (fetchedData.toString().startsWith("number:")) {
-                                fetchedData = fetchedData.replace("number:", "");
-                                fetchedData = Number(fetchedData);
-                            } else if (fetchedData.toString().startsWith("object:")) {
-                                const val = fetchedData.replace("object:", "");
-                                if (val === "null") fetchedData = null;
-                            } else if (fetchedData.toString().startsWith("string:")) {
-                                fetchedData = fetchedData.replace("string:", "");
-                            }
+                            fetchedData = CacheService.parseRedis(fetchedData);
                         }
                     }
 
@@ -429,6 +417,8 @@ export = {
                     if (targetProvided) {
                         if (isCacheEnabled) {
                             if (DatabaseManager.redis) {
+                                // check if redis is ready and connected
+
                                 const redisTTL = options?.redis?.ttl ?? -1;
 
                                 if (typeof value === "object" && value) {
@@ -1329,37 +1319,74 @@ export = {
 
                         return typeof options?.limit === "number" && options.limit > 0 ? filtered.slice(0, options.limit) : filtered;
                     } else {
-                        const cacheKeys = [...DatabaseManager.cache.keys()];
-                        const filtered = cacheKeys
-                            .filter((v) => v.startsWith(this.table.collection.name + "."))
-                            .map((m) => {
-                                const data = DatabaseManager.cache.get(m);
-                                const id = m.split(".").pop();
+                        if (DatabaseManager.redis === undefined || DatabaseManager.cache === undefined) return null;
 
-                                return {
-                                    id,
-                                    data
-                                };
+                        if (!DatabaseManager.redis) {
+                            const cacheKeys = [...DatabaseManager.cache.keys()];
+                            let filtered = cacheKeys.filter((v) => v.startsWith(this.table.collection.name + "."));
+
+                            if (options?.documentForm) {
+                                return filtered.map((v) => {
+                                    const key = v.split(".").slice(1).join(".");
+                                    const value = DatabaseManager.cache.get(v);
+                                    return { key, value };
+                                });
+                            }
+
+                            filtered = filtered.map((v) => {
+                                const key = v.split(".").slice(1).join(".");
+                                const value = DatabaseManager.cache.get(v);
+                                return { key, value };
                             });
 
-                        if (options && options.documentForm) {
-                            return filtered;
+                            if (typeof options?.sort === "string") {
+                                const key = options.sort;
+                                filtered = filtered.filter((v) => v.key.startsWith(key));
+                            }
+
+                            return typeof options?.limit === "number" && options.limit > 0 ? filtered.slice(0, options.limit) : filtered;
+                        } else {
+                            const cacheKeys = await DatabaseManager.redis.keys(this.table.collection.name + ".*");
+                            const filtered = cacheKeys.filter((v) => v.startsWith(this.table.collection.name + "."));
+
+                            if (options?.documentForm) {
+                                const data = [];
+                                for (const key of filtered) {
+                                    try {
+                                        const value = await DatabaseManager.redis.json.get(key, "$");
+                                        data.push({ key, value });
+                                    } catch (err) {
+                                        const value = await DatabaseManager.redis.get(key);
+                                        data.push({ key, value });
+                                    }
+                                }
+                                return data;
+                            }
+
+                            const data = [];
+                            for (const key of filtered) {
+                                try {
+                                    const value = await DatabaseManager.redis.json.get(key, "$");
+                                    data.push({ key, value });
+                                } catch (err) {
+                                    const value = await DatabaseManager.redis.get(key);
+                                    data.push({ key, value });
+                                }
+                            }
+
+                            if (typeof options?.sort === "string") {
+                                const key = options.sort;
+                                data.filter((v) => v.key.startsWith(key));
+                            }
+
+                            for (const value of data) {
+                                if (typeof value.value === "string") {
+                                    value.value = CacheService.parseRedis(value.value);
+                                }
+                            }
+
+                            return typeof options?.limit === "number" && options.limit > 0 ? data.slice(0, options.limit) : data;
                         }
-
-                        let filtered2 = filtered
-                            .filter((v) => options?.filter?.({ id: v.id, data: v.data }) ?? true)
-                            .map((m) => ({
-                                id: m.id,
-                                data: m.data
-                            })) as AllData<unknown>[];
-
-                        if (typeof options?.sort === "string") {
-                            if (options.sort.startsWith(".")) options.sort = options.sort.slice(1);
-                            const pref = options.sort.split(".");
-                            filtered2 = _.sortBy(filtered2, pref).reverse();
-                        }
-
-                        return typeof options?.limit === "number" && options.limit > 0 ? filtered2.slice(0, options.limit) : filtered2;
                     }
                 } catch (err) {
                     if (tableOptions && tableOptions.catchErrors) {

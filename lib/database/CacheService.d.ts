@@ -22,5 +22,9 @@ declare class CacheService {
      * @returns {Date}
      */
     static createDuration(duration: number): Date;
+    /**
+     * Format redis
+     */
+    static parseRedis: (data: string) => unknown;
 }
 export default CacheService;

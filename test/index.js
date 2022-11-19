@@ -79,11 +79,20 @@ async function test() {
             console.log("Got all data");
 
             const ping = await db.ping({
-                tableName: "npm-test",
+                tableName: "npm-testing",
                 dataToGet: "test.tests"
             });
 
             console.log("Got ping!", ping);
+
+            console.log(
+                await schema.all({
+                    cache: {
+                        cacheOnly: true
+                    },
+                    sort: "test.test"
+                })
+            );
 
             await schema.drop();
             console.log("Dropped schema");

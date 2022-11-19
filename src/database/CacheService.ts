@@ -70,6 +70,28 @@ class CacheService {
         const _duration = new Date(Date.now() + duration);
         return _duration;
     }
+
+    /**
+     * Format redis
+     */
+    public static parseRedis = (data: string): unknown => {
+        let fetchedData: any = data;
+        if (fetchedData.toString().startsWith("boolean:")) {
+            fetchedData = fetchedData.replace("boolean:", "");
+            if (fetchedData === "true") fetchedData = true;
+            else if (fetchedData === "false") fetchedData = false;
+        } else if (fetchedData.toString().startsWith("number:")) {
+            fetchedData = fetchedData.replace("number:", "");
+            fetchedData = Number(fetchedData);
+        } else if (fetchedData.toString().startsWith("object:")) {
+            const val = fetchedData.replace("object:", "");
+            if (val === "null") fetchedData = null;
+        } else if (fetchedData.toString().startsWith("string:")) {
+            fetchedData = fetchedData.replace("string:", "");
+        }
+
+        return fetchedData;
+    };
 }
 
 export default CacheService;

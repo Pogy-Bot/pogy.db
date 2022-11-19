@@ -374,6 +374,7 @@ class DatabaseManager {
             cacheOnly?: boolean;
         };
     }): boolean {
+        if (this.redis === undefined || this.cache === undefined) return false;
         return (options && options?.cache?.toggle === true ? true : false) ? true : this.options.cache?.toggle === true && (options ? options?.cache?.toggle !== false : true) ? true : false;
     }
 }
