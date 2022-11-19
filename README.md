@@ -110,15 +110,7 @@ async function start() {
 
     await schema.stats();
 
-    await schema.all({
-      documentForm: false,
-      cache: {
-        cacheOnly: false;
-     },
-     limit: 10,
-     sort: "id",
-     filter: (doc) => doc.id === "710465231779790849"
-    });
+    await schema.all({ documentForm: false,cache: {cacheOnly: false;},limit: 10,sort: "id",filter: (doc) => doc.id === "710465231779790849"});
 
     await schema.drop();
   }
@@ -967,7 +959,3 @@ rs.initiate()
 ```
 
 This will initialize your database as a replica set.
-
-```
-
-```
