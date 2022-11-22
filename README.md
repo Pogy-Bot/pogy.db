@@ -206,7 +206,7 @@ All functions in this package return a promise. So `await` is needed to get the 
 
 ## TABLE
 
-### table(name)
+### table(name, options)
 
 This function is used to create a table in the database or fetch an existing table; its as if you are creating a model in mongoose.
 
@@ -219,8 +219,47 @@ tableName: string, // table name
 tableOptions?: {
       cacheLargeData?: boolean; // cache large data (first key) like table.set(key) instead of table.set(key.subKey)
       catchErrors?: boolean; // log the errors of the table if there are ever any
+      watchDeletions?: boolean; // watch for deletions in the table (used to delete cache)
 }
 ```
+
+**watchDeletions**
+This is used whenever you want to create a schema with cache on, and delete its cache automatically once the schema is deleted.
+
+> IF CACHE IS DISABLED, THIS WON'T BE NEEDED!
+
+> `.watch` in mongoose lowers the performance of the database, so it is recommended to only use this when you need it. Also keep in mind that when you restart your instance, you will have to re-initialize the watch and setting the data. Therefore, its recommended you only use this while deleting data in a short period of time. If you still want to use ttl, use ttl but with cache disabled. You can simply add { cache: {toggle: false} } to the options of the function and that is it.
+
+1. Create the table and enable watchDeletions to delete the cache when a schema in the table is deleted.
+
+```ts
+const schema = await new database.table("users", {
+    watchDeletions: true
+});
+```
+
+2. Start by setting the data.
+
+```ts
+await schema.set(
+    "discord",
+    {
+        id: "710465231779790849",
+        username: "Peter_#4444"
+    },
+    {
+        cache: {
+            toggle: true,
+            cacheOnly: false
+        },
+        database: {
+            ttl: 1 //schema will be deleted after 1 second
+        }
+    }
+);
+```
+
+Since cache is on and watchDeletions is enabled, the cache will be deleted once a schema with ttl is deleted in the table.
 
 **example:**
 
@@ -720,7 +759,6 @@ console.log(ping);
     "timeToGetData": 0.011600017547607422, // the time taken to get the data in ms
     "redisPing": 1.380900003015995, // the time taken to ping redis, if redis is enabled
     "totalPing": 0.04610002040863037, // the total ping (table and data) in ms
-    "errors": [] // the errors if there's any
 }
 ```
 

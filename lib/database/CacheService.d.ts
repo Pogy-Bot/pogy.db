@@ -2,13 +2,14 @@ import { Model } from "mongoose";
 import { CollectionInterface } from "./collection";
 declare class CacheService {
     private cache;
-    static cache: Map<
-        string,
-        {
-            keys: string[];
-        }
-    >;
-    static setCache(options: { id: string; key: string }): void;
+    static cache: Map<string, {
+        keys: string[];
+    }>;
+    static watchedTables: string[];
+    static setCache(options: {
+        id: string;
+        key: string;
+    }): void;
     static init(table: Model<CollectionInterface<unknown>>): void;
     /**
      * Check if the duration should expire

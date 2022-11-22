@@ -16,6 +16,7 @@ class CacheService {
             keys: string[];
         }
     > = new Map();
+    static watchedTables: string[] = [];
 
     public static setCache(options: { id: string; key: string }) {
         CacheService.cache.set(options.id, {
@@ -24,6 +25,9 @@ class CacheService {
     }
 
     public static init(table: Model<CollectionInterface<unknown>>) {
+        if (this.watchedTables.includes(table.collection.name)) return;
+        this.watchedTables.push(table.collection.name);
+
         table
             .watch([
                 {

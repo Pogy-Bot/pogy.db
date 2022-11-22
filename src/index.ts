@@ -241,6 +241,7 @@ export = {
         tableOptions?: {
             cacheLargeData?: boolean;
             catchErrors?: boolean;
+            watchDeletions?: boolean;
         }
     ): Promise<CustomizedTable | any> {
         return (async () => {
@@ -252,9 +253,11 @@ export = {
                 DatabaseManager.tables.push(tableName);
             }
 
+            // create or fetch a table
             this.table = modelSchema(DatabaseManager.client, tableName);
 
-            CacheService.init(this.table);
+            // init the table to the mongoose watch
+            if (tableOptions && tableOptions?.watchDeletions) CacheService.init(this.table);
 
             /**
              * @info Get the value of a key from the table
@@ -490,7 +493,7 @@ export = {
                         }
                     }
 
-                    if (options?.database?.ttl) {
+                    if (options?.database?.ttl && isCacheEnabled && tableOptions?.watchDeletions) {
                         const table = await this.table.findOne({ id: key });
                         if (table) {
                             CacheService.setCache({
